@@ -18,18 +18,18 @@ $piloto_id = isset($_GET['id']) ? intval($_GET['id']) : (isset($_POST['piloto_id
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $piloto_id) {
     // Coleta dos dados do formulário
-    $forca_seguranca = htmlspecialchars($_POST['forca_seguranca']);
-    $posto_graduacao = htmlspecialchars($_POST['posto_graduacao']);
-    $nome_completo = htmlspecialchars($_POST['nome_completo']);
-    $email = htmlspecialchars($_POST['email']);
-    $telefone = htmlspecialchars($_POST['telefone']);
-    $crbm_piloto = htmlspecialchars($_POST['crbm_piloto']);
-    $obm_piloto = htmlspecialchars($_POST['obm_piloto']);
-    $cadastro_sarpas = htmlspecialchars($_POST['cadastro_sarpas']);
-    $cparp = htmlspecialchars($_POST['cparp']);
-    $status_piloto = htmlspecialchars($_POST['status_piloto']);
-    $info_adicionais_piloto = htmlspecialchars($_POST['info_adicionais']);
-    $tipo_usuario_input = htmlspecialchars($_POST['tipo_usuario']);
+    $forca_seguranca = $_POST['forca_seguranca'];
+    $posto_graduacao = $_POST['posto_graduacao'];
+    $nome_completo = $_POST['nome_completo'];
+    $email = $_POST['email'];
+    $telefone = $_POST['telefone'];
+    $crbm_piloto = $_POST['crbm_piloto'];
+    $obm_piloto = $_POST['obm_piloto'];
+    $cadastro_sarpas = $_POST['cadastro_sarpas'];
+    $cparp = $_POST['cparp'];
+    $status_piloto = $_POST['status_piloto'];
+    $info_adicionais_piloto = $_POST['info_adicionais'];
+    $tipo_usuario_input = $_POST['tipo_usuario'];
     
     // Busca o tipo de usuário atual e a força de segurança para verificação de permissão
     $stmt_current = $conn->prepare("SELECT tipo_usuario, forca_seguranca FROM pilotos WHERE id = ?");
@@ -284,13 +284,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const config = configForcas[forca];
 
-        // ######### INÍCIO DA CORREÇÃO #########
         // Atualiza os labels dinamicamente com base na Força de Segurança
         postoGraduacaoLabel.textContent = config.posto_graduacao_label + ':';
         crbmPilotoLabel.textContent = config.crbm_label + ':';
         obmPilotoLabel.textContent = config.obm_label + ':';
         cparpLabel.textContent = config.cparp_label + ':';
-        // ######### FIM DA CORREÇÃO #########
 
         // Popula Posto/Graduação
         populateSelect(postoGraduacaoSelect, config.postos_graduacoes, 'Selecione...', valorSalvo.posto_graduacao);

@@ -49,17 +49,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['pilotos']) && !empty($
         // Coleta dos dados do formulário
         $aeronave_id = intval($_POST['aeronave_id']);
         $pilotos_selecionados = array_unique(array_filter($_POST['pilotos']));
-        $data = htmlspecialchars($_POST['data']); // CORREÇÃO
-        $descricao_operacao = htmlspecialchars($_POST['descricao_operacao']);
-        $protocolo_sarpas = htmlspecialchars($_POST['protocolo_sarpas']);
-        $rgo_ocorrencia = htmlspecialchars($_POST['rgo_ocorrencia']);
-        $dados_vitima = htmlspecialchars($_POST['dados_vitima']);
-        $link_fotos_videos = htmlspecialchars($_POST['link_fotos_videos']);
-        $descricao_ocorrido = htmlspecialchars($_POST['descricao_ocorrido']);
-        $contato_ats = htmlspecialchars($_POST['contato_ats']);
-        $contato_ats_outro = ($contato_ats == 'Outro') ? htmlspecialchars($_POST['contato_ats_outro']) : NULL;
-        $forma_acionamento = htmlspecialchars($_POST['forma_acionamento']);
-        $forma_acionamento_outro = ($forma_acionamento == 'Outro') ? htmlspecialchars($_POST['forma_acionamento_outro']) : NULL;
+        $data = $_POST['data'];
+        $descricao_operacao = $_POST['descricao_operacao'];
+        $protocolo_sarpas = $_POST['protocolo_sarpas'];
+        $rgo_ocorrencia = $_POST['rgo_ocorrencia'];
+        $dados_vitima = $_POST['dados_vitima'];
+        $link_fotos_videos = $_POST['link_fotos_videos'];
+        $descricao_ocorrido = $_POST['descricao_ocorrido'];
+        $contato_ats = $_POST['contato_ats'];
+        $contato_ats_outro = ($contato_ats == 'Outro') ? $_POST['contato_ats_outro'] : NULL;
+        $forma_acionamento = $_POST['forma_acionamento'];
+        $forma_acionamento_outro = ($forma_acionamento == 'Outro') ? $_POST['forma_acionamento_outro'] : NULL;
         
         // Carrega os dados antigos para o caso de não haver upload de novos GPX
         $stmt_current_gpx_data = $conn->prepare("SELECT altitude_maxima, total_distancia_percorrida, total_tempo_voo, data_primeira_decolagem, data_ultimo_pouso FROM missoes WHERE id = ?");
@@ -136,7 +136,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['pilotos']) && !empty($
 
     } catch (Exception $e) {
         $conn->rollback();
-        $mensagem_status = "<div class='error-message-box'>Erro ao atualizar a missão: " . $e->getMessage() . "</div>";
+        $mensagem_status = "<div class='error-message-box'>Erro ao atualizar a missão: " . htmlspecialchars($e->getMessage()) . "</div>";
     }
 }
 
@@ -189,10 +189,10 @@ if($result_operacoes) {
                         <label for="descricao_operacao">Descrição da Operação:</label>
                         <select id="descricao_operacao" name="descricao_operacao" required>
                              <?php foreach($tipos_operacao as $tipo): ?>
-                                <option value="<?php echo htmlspecialchars($tipo['nome']); ?>" <?php echo ($missao_data['descricao_operacao'] == $tipo['nome']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($tipo['nome']); ?>
-                                </option>
-                            <?php endforeach; ?>
+                                 <option value="<?php echo htmlspecialchars($tipo['nome']); ?>" <?php echo ($missao_data['descricao_operacao'] == $tipo['nome']) ? 'selected' : ''; ?>>
+                                     <?php echo htmlspecialchars($tipo['nome']); ?>
+                                 </option>
+                             <?php endforeach; ?>
                         </select>
                     </div>
                      <div class="form-group">
@@ -227,10 +227,10 @@ if($result_operacoes) {
                         <label for="pilotos">Piloto(s):</label>
                         <select id="pilotos" name="pilotos[]" required multiple size="5">
                              <?php foreach ($pilotos_disponiveis as $piloto): ?>
-                                <option value="<?php echo $piloto['id']; ?>" <?php echo in_array($piloto['id'], $pilotos_associados_ids) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($piloto['posto_graduacao'] . ' ' . $piloto['nome_completo']); ?>
-                                </option>
-                            <?php endforeach; ?>
+                                 <option value="<?php echo $piloto['id']; ?>" <?php echo in_array($piloto['id'], $pilotos_associados_ids) ? 'selected' : ''; ?>>
+                                     <?php echo htmlspecialchars($piloto['posto_graduacao'] . ' ' . $piloto['nome_completo']); ?>
+                                 </option>
+                             <?php endforeach; ?>
                         </select>
                         <small>Para selecionar múltiplos, segure Ctrl (ou Cmd no Mac).</small>
                     </div>

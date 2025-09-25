@@ -131,69 +131,20 @@ function formatarDistancia($metros) {
     .detail-item p, .detail-item ul { margin: 0; padding: 0; color: #333; font-size: 1.1em; }
     .detail-item ul { list-style-position: inside; }
     
-    /* Estilos da Legenda do Mapa */
-    #map-legend {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 5px 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        z-index: 1;
-        max-width: 200px;
-    }
-    .legend-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-    }
-    .legend-header h4 {
-        margin: 0;
-        padding-right: 10px;
-    }
-    .legend-toggle-btn {
-        background: none;
-        border: none;
-        font-size: 16px;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
-        color: #333;
-    }
-    #legend-content {
-        margin-top: 5px;
-        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-        max-height: 300px; /* Altura suficiente para os itens */
-        overflow: hidden;
-    }
-    #map-legend.collapsed #legend-content {
-        max-height: 0;
-        opacity: 0;
-        margin-top: 0;
-    }
-    .legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 5px;
-    }
-    .legend-key {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        margin-right: 8px;
-        border-radius: 3px;
-        border: 1px solid rgba(0,0,0,0.2);
-    }
+    #map-legend { position: absolute; top: 10px; left: 10px; background: rgba(255, 255, 255, 0.9); padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; font-family: Arial, sans-serif; font-size: 14px; z-index: 1; max-width: 200px; }
+    .legend-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .legend-header h4 { margin: 0; padding-right: 10px; }
+    .legend-toggle-btn { background: none; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; color: #333; }
+    #legend-content { margin-top: 5px; transition: max-height 0.3s ease-out, opacity 0.3s ease-out; max-height: 300px; overflow: hidden; }
+    #map-legend.collapsed #legend-content { max-height: 0; opacity: 0; margin-top: 0; }
+    .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+    .legend-key { display: inline-block; width: 20px; height: 20px; margin-right: 8px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.2); }
 </style>
 
 <div class="main-content">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
-        <h1>Detalhes da Missão <?php echo !empty($missao_details['rgo_ocorrencia']) ? 'RGO ' . htmlspecialchars($missao_details['rgo_ocorrencia']) : '#' . $missao_id; ?></h1>
-        <?php if ($missao_details): // Botão Gerar PDF só se a missão for encontrada ?>
+        <h1>Detalhes da Missão <?php echo !empty($missao_details['rgo_ocorrencia']) ? 'RGO ' . htmlspecialchars($missao_details['rgo_ocorrencia']) : '#' . htmlspecialchars($missao_id); ?></h1>
+        <?php if ($missao_details): ?>
             <a href="gerar_pdf_detalhes_missao.php?id=<?php echo $missao_id; ?>" target="_blank" class="form-actions button" style="text-decoration: none; display: inline-block; padding: 10px 20px; background-color: #c0392b; color: #fff;">
                 <i class="fas fa-file-pdf"></i> Gerar PDF
             </a>
@@ -209,8 +160,8 @@ function formatarDistancia($metros) {
                     <div id='map' style='width: 100%; height: 450px; border-radius: 5px;'></div>
                     <div id='map-legend' style="display: none;">
                         <div id="legend-header" class="legend-header">
-                           <h4>Legenda</h4>
-                           <button id="legend-toggle-btn" class="legend-toggle-btn"><i class="fas fa-minus"></i></button>
+                            <h4>Legenda</h4>
+                            <button id="legend-toggle-btn" class="legend-toggle-btn"><i class="fas fa-minus"></i></button>
                         </div>
                         <div id="legend-content"></div>
                     </div>
@@ -220,24 +171,24 @@ function formatarDistancia($metros) {
             <fieldset class="details-fieldset">
                 <legend>Detalhes da Operação</legend>
                 <div class="details-grid">
-                    <div class="detail-item"><strong>Data:</strong><p><?php echo date("d/m/Y", strtotime($missao_details['data'])); ?></p></div>
+                    <div class="detail-item"><strong>Data:</strong><p><?php echo htmlspecialchars(date("d/m/Y", strtotime($missao_details['data']))); ?></p></div>
                     <div class="detail-item"><strong>Nº RGO:</strong><p><?php echo htmlspecialchars($missao_details['rgo_ocorrencia'] ?? 'Não informado'); ?></p></div>
                     <div class="detail-item"><strong>Descrição da Operação:</strong><p><?php echo htmlspecialchars($missao_details['descricao_operacao']); ?></p></div>
                     <div class="detail-item"><strong>Protocolo SARPAS:</strong><p><?php echo htmlspecialchars($missao_details['protocolo_sarpas'] ?? 'Não informado'); ?></p></div>
                     <div class="detail-item">
                         <strong>Forma de Acionamento:</strong>
                         <p><?php echo htmlspecialchars($missao_details['forma_acionamento']); ?>
-                           <?php if($missao_details['forma_acionamento'] == 'Outro' && !empty($missao_details['forma_acionamento_outro'])): ?>
-                               (<?php echo htmlspecialchars($missao_details['forma_acionamento_outro']); ?>)
-                           <?php endif; ?>
+                            <?php if($missao_details['forma_acionamento'] == 'Outro' && !empty($missao_details['forma_acionamento_outro'])): ?>
+                                (<?php echo htmlspecialchars($missao_details['forma_acionamento_outro']); ?>)
+                            <?php endif; ?>
                         </p>
                     </div>
                     <div class="detail-item">
                          <strong>Contato com o Orgão ATS:</strong>
                         <p><?php echo htmlspecialchars($missao_details['contato_ats']); ?>
-                           <?php if($missao_details['contato_ats'] == 'Outro' && !empty($missao_details['contato_ats_outro'])): ?>
-                               (<?php echo htmlspecialchars($missao_details['contato_ats_outro']); ?>)
-                           <?php endif; ?>
+                            <?php if($missao_details['contato_ats'] == 'Outro' && !empty($missao_details['contato_ats_outro'])): ?>
+                                (<?php echo htmlspecialchars($missao_details['contato_ats_outro']); ?>)
+                            <?php endif; ?>
                         </p>
                     </div>
                 </div>
@@ -303,11 +254,11 @@ function formatarDistancia($metros) {
                             <?php foreach ($gpx_files_logs as $log): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($log['file_name']); ?></td>
-                                <td><?php echo date("d/m/Y H:i:s", strtotime($log['data_decolagem'])); ?></td>
-                                <td><?php echo date("d/m/Y H:i:s", strtotime($log['data_pouso'])); ?></td>
-                                <td><?php echo formatarTempoVooCompleto($log['tempo_voo']); ?></td>
-                                <td><?php echo formatarDistancia($log['distancia_percorrida']); ?></td>
-                                <td><?php echo round($log['altura_maxima'], 2); ?> m</td>
+                                <td><?php echo htmlspecialchars(date("d/m/Y H:i:s", strtotime($log['data_decolagem']))); ?></td>
+                                <td><?php echo htmlspecialchars(date("d/m/Y H:i:s", strtotime($log['data_pouso']))); ?></td>
+                                <td><?php echo htmlspecialchars(formatarTempoVooCompleto($log['tempo_voo'])); ?></td>
+                                <td><?php echo htmlspecialchars(formatarDistancia($log['distancia_percorrida'])); ?></td>
+                                <td><?php echo htmlspecialchars(round($log['altura_maxima'], 2)); ?> m</td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -318,11 +269,11 @@ function formatarDistancia($metros) {
             <fieldset class="details-fieldset">
                 <legend>Log Total Consolidado da Missão</legend>
                  <div class="details-grid">
-                    <div class="detail-item"><strong>Primeira Decolagem:</strong><p><?php echo date("d/m/Y H:i", strtotime($missao_details['data_primeira_decolagem'])); ?></p></div>
-                    <div class="detail-item"><strong>Último Pouso:</strong><p><?php echo date("d/m/Y H:i", strtotime($missao_details['data_ultimo_pouso'])); ?></p></div>
-                    <div class="detail-item"><strong>Tempo Total de Voo:</strong><p><?php echo formatarTempoVooCompleto($missao_details['total_tempo_voo']); ?></p></div>
-                    <div class="detail-item"><strong>Distância Total Percorrida:</strong><p><?php echo formatarDistancia($missao_details['total_distancia_percorrida']); ?></p></div>
-                    <div class="detail-item" style="grid-column: 1 / -1;"><strong>Altura Máxima Atingida na Missão:</strong><p><?php echo round($missao_details['altitude_maxima'], 2); ?> m</p></div>
+                    <div class="detail-item"><strong>Primeira Decolagem:</strong><p><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($missao_details['data_primeira_decolagem']))); ?></p></div>
+                    <div class="detail-item"><strong>Último Pouso:</strong><p><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($missao_details['data_ultimo_pouso']))); ?></p></div>
+                    <div class="detail-item"><strong>Tempo Total de Voo:</strong><p><?php echo htmlspecialchars(formatarTempoVooCompleto($missao_details['total_tempo_voo'])); ?></p></div>
+                    <div class="detail-item"><strong>Distância Total Percorrida:</strong><p><?php echo htmlspecialchars(formatarDistancia($missao_details['total_distancia_percorrida'])); ?></p></div>
+                    <div class="detail-item" style="grid-column: 1 / -1;"><strong>Altura Máxima Atingida na Missão:</strong><p><?php echo htmlspecialchars(round($missao_details['altitude_maxima'], 2)); ?> m</p></div>
                  </div>
             </fieldset>
 
@@ -394,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     'paint': {'line-color': color, 'line-width': 4, 'line-opacity': 0.85}
                 });
                 
-                // Adicionar item à legenda
                 const legendItem = document.createElement('div');
                 legendItem.className = 'legend-item';
                 const legendKey = document.createElement('span');
@@ -405,11 +355,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 legendItem.appendChild(legendLabel);
                 legendContent.appendChild(legendItem);
 
-                // Adicionar marcadores de início e fim
                 new mapboxgl.Marker({ color: '#28a745' }).setLngLat(trajetoria[0]).setPopup(new mapboxgl.Popup().setText(`Início do Voo ${index + 1}`)).addTo(map);
                 new mapboxgl.Marker({ color: '#dc3545' }).setLngLat(trajetoria[trajetoria.length - 1]).setPopup(new mapboxgl.Popup().setText(`Fim do Voo ${index + 1}`)).addTo(map);
 
-                // Estender os limites do mapa para incluir a trajetória
                 trajetoria.forEach(coord => bounds.extend(coord));
             });
             

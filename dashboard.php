@@ -57,9 +57,9 @@ if ($isSuperAdmin) {
         $stmt_missoes->close();
 
         $stmt_manutencoes = $conn->prepare("SELECT COUNT(m.id) AS total FROM manutencoes m 
-                                            LEFT JOIN aeronaves a ON m.equipamento_id = a.id AND m.equipamento_tipo = 'Aeronave'
-                                            LEFT JOIN controles c ON m.equipamento_id = c.id AND m.equipamento_tipo = 'Controle'
-                                            WHERE (a.forca_seguranca = ? OR c.forca_seguranca = ?)");
+                                           LEFT JOIN aeronaves a ON m.equipamento_id = a.id AND m.equipamento_tipo = 'Aeronave'
+                                           LEFT JOIN controles c ON m.equipamento_id = c.id AND m.equipamento_tipo = 'Controle'
+                                           WHERE (a.forca_seguranca = ? OR c.forca_seguranca = ?)");
         $stmt_manutencoes->bind_param("ss", $fs_do_usuario, $fs_do_usuario);
         $stmt_manutencoes->execute();
         $total_manutencoes = $stmt_manutencoes->get_result()->fetch_assoc()['total'];
@@ -82,10 +82,10 @@ if ($isSuperAdmin) {
 
     if (!empty($obm_do_usuario)) {
         $stmt_manutencoes_obm = $conn->prepare("SELECT COUNT(m.id) AS total 
-                                                FROM manutencoes m 
-                                                LEFT JOIN aeronaves a ON m.equipamento_id = a.id AND m.equipamento_tipo = 'Aeronave'
-                                                LEFT JOIN controles c ON m.equipamento_id = c.id AND m.equipamento_tipo = 'Controle'
-                                                WHERE a.obm = ? OR c.obm = ?");
+                                               FROM manutencoes m 
+                                               LEFT JOIN aeronaves a ON m.equipamento_id = a.id AND m.equipamento_tipo = 'Aeronave'
+                                               LEFT JOIN controles c ON m.equipamento_id = c.id AND m.equipamento_tipo = 'Controle'
+                                               WHERE a.obm = ? OR c.obm = ?");
         $stmt_manutencoes_obm->bind_param("ss", $obm_do_usuario, $obm_do_usuario);
         $stmt_manutencoes_obm->execute();
         $total_manutencoes = $stmt_manutencoes_obm->get_result()->fetch_assoc()['total'];
@@ -206,50 +206,50 @@ function formatarTempoVoo($segundos) {
                 <div class="card-icon" style="background-color: #e6f7ff; color: #1890ff;"><i class="fas fa-users"></i></div>
                 <div class="card-content">
                     <h2>Pilotos Cadastrados<?php echo ($isAdmin) ? ' (' . htmlspecialchars($fs_do_usuario) . ')' : ''; ?></h2>
-                    <p><?php echo $total_pilotos; ?></p>
+                    <p><?php echo htmlspecialchars($total_pilotos); ?></p>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon" style="background-color: #e9fbf0; color: #52c41a;"><i class="fas fa-plane"></i></div>
                 <div class="card-content">
                     <h2>Aeronaves Cadastradas<?php echo ($isAdmin) ? ' (' . htmlspecialchars($fs_do_usuario) . ')' : ''; ?></h2>
-                    <p><?php echo $total_aeronaves; ?></p>
+                    <p><?php echo htmlspecialchars($total_aeronaves); ?></p>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon" style="background-color: #fffbe6; color: #faad14;"><i class="fas fa-map-marked-alt"></i></div>
                 <div class="card-content">
                     <h2>Missões Realizadas<?php echo ($isAdmin) ? ' (' . htmlspecialchars($fs_do_usuario) . ')' : ''; ?></h2>
-                    <p><?php echo $total_missoes; ?></p>
+                    <p><?php echo htmlspecialchars($total_missoes); ?></p>
                 </div>
-            </div>           
+            </div>          
             <div class="card">
                  <div class="card-icon" style="background-color: #fce8e7; color: #f5222d;"><i class="fas fa-tools"></i></div>
                 <div class="card-content">
                     <h2>Manutenções Registradas<?php echo ($isAdmin) ? ' (' . htmlspecialchars($fs_do_usuario) . ')' : ''; ?></h2>
-                    <p><?php echo $total_manutencoes; ?></p>
+                    <p><?php echo htmlspecialchars($total_manutencoes); ?></p>
                 </div>
             </div>
         <?php elseif ($isPiloto): ?>
             <div class="card">
                 <div class="card-icon" style="background-color: #e9fbf0; color: #52c41a;"><i class="fas fa-plane"></i></div>
                 <div class="card-content">
-                    <h2>Aeronaves no seu <?php echo ($fs_do_usuario === 'PMPR') ? 'CRPM' : 'CRBM'; ?></h2>
-                    <p><?php echo $total_aeronaves; ?></p>
+                    <h2>Aeronaves no seu <?php echo htmlspecialchars(($fs_do_usuario === 'PMPR') ? 'CRPM' : 'CRBM'); ?></h2>
+                    <p><?php echo htmlspecialchars($total_aeronaves); ?></p>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon" style="background-color: #fffbe6; color: #faad14;"><i class="fas fa-map-marked-alt"></i></div>
                 <div class="card-content">
-                    <h2>Missões (seu <?php echo ($fs_do_usuario === 'PMPR') ? 'CRPM' : 'CRBM'; ?>)</h2>
-                    <p><?php echo $total_missoes; ?></p>
+                    <h2>Missões (seu <?php echo htmlspecialchars(($fs_do_usuario === 'PMPR') ? 'CRPM' : 'CRBM'); ?>)</h2>
+                    <p><?php echo htmlspecialchars($total_missoes); ?></p>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon" style="background-color: #fce8e7; color: #f5222d;"><i class="fas fa-tools"></i></div>
                 <div class="card-content">
-                    <h2>Manutenções (sua <?php echo ($fs_do_usuario === 'PMPR') ? 'OPM' : 'OBM'; ?>)</h2>
-                    <p><?php echo $total_manutencoes; ?></p>
+                    <h2>Manutenções (sua <?php echo htmlspecialchars(($fs_do_usuario === 'PMPR') ? 'OPM' : 'OBM'); ?>)</h2>
+                    <p><?php echo htmlspecialchars($total_manutencoes); ?></p>
                 </div>
             </div>
         <?php endif; ?>
@@ -274,8 +274,8 @@ function formatarTempoVoo($segundos) {
                             <tr>
                                 <td style="text-align: center;"><?php echo htmlspecialchars($missao['aeronave_prefixo']); ?></td>
                                 <td style="text-align: center;"><?php echo $missao['pilotos_nomes'] ?? 'N/A'; ?></td>
-                                <td style="text-align: center;"><?php echo date("d/m/Y", strtotime($missao['data'])); ?></td>
-                                <td style="text-align: center;"><?php echo formatarTempoVoo($missao['total_tempo_voo']); ?></td>
+                                <td style="text-align: center;"><?php echo htmlspecialchars(date("d/m/Y", strtotime($missao['data']))); ?></td>
+                                <td style="text-align: center;"><?php echo htmlspecialchars(formatarTempoVoo($missao['total_tempo_voo'])); ?></td>
                                 <td style="text-align: center;"><span class="status-ativo">Concluída</span></td>
                             </tr>
                         <?php endforeach; ?>

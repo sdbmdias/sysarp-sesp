@@ -40,19 +40,19 @@ if ($result_modelos) {
 
 // Lógica de atualização do formulário
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $aeronave_id) {
-    $forca_seguranca = htmlspecialchars($_POST['forca_seguranca']);
-    $fabricante = htmlspecialchars($_POST['fabricante']);
-    $modelo_id = htmlspecialchars($_POST['modelo']);
-    $prefixo = htmlspecialchars($_POST['prefixo']);
-    $numero_serie = htmlspecialchars($_POST['numero_serie']);
-    $cadastro_sisant = htmlspecialchars($_POST['cadastro_sisant']);
-    $validade_sisant = htmlspecialchars($_POST['validade_sisant']);
-    $crbm = htmlspecialchars($_POST['crbm']);
-    $obm = htmlspecialchars($_POST['obm']);
-    $data_aquisicao = htmlspecialchars($_POST['data_aquisicao']);
-    $status = htmlspecialchars($_POST['status']);
-    $homologacao_anatel = htmlspecialchars($_POST['homologacao_anatel']);
-    $info_adicionais = htmlspecialchars($_POST['info_adicionais']);
+    $forca_seguranca = $_POST['forca_seguranca'];
+    $fabricante = $_POST['fabricante'];
+    $modelo_id = $_POST['modelo'];
+    $prefixo = $_POST['prefixo'];
+    $numero_serie = $_POST['numero_serie'];
+    $cadastro_sisant = $_POST['cadastro_sisant'];
+    $validade_sisant = $_POST['validade_sisant'];
+    $crbm = $_POST['crbm'];
+    $obm = $_POST['obm'];
+    $data_aquisicao = $_POST['data_aquisicao'];
+    $status = $_POST['status'];
+    $homologacao_anatel = $_POST['homologacao_anatel'];
+    $info_adicionais = $_POST['info_adicionais'];
     
     // Busca o modelo a partir do ID para obter nome e tipo
     $stmt_modelo_info = $conn->prepare("SELECT fabricante, modelo, tipo_drone, pmd_kg FROM fabricantes_modelos WHERE id = ?");
@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $aeronave_id) {
                 setTimeout(function() {
                     window.location.href = 'listar_aeronaves.php';
                 }, 2000);
-              </script>";
+            </script>";
     } else {
         if ($conn->errno == 1062) {
             $mensagem_status = "<div class='error-message-box'>Erro: O prefixo ou número de série já existe.</div>";
@@ -131,7 +131,7 @@ if ($aeronave_id) {
                             </option>
                         <?php endforeach; ?>
                     </select>
-                     <input type="hidden" name="forca_seguranca" value="<?php echo htmlspecialchars($aeronave_data['forca_seguranca']); ?>">
+                    <input type="hidden" name="forca_seguranca" value="<?php echo htmlspecialchars($aeronave_data['forca_seguranca']); ?>">
                 </div>
                 <div class="form-group">
                     <label for="prefixo">Prefixo:</label>
@@ -192,7 +192,7 @@ if ($aeronave_id) {
                         <option value="adida" <?php echo ($aeronave_data['status'] == 'adida') ? 'selected' : ''; ?>>Adida</option>
                     </select>
                 </div>
-                 <div class="form-group">
+                <div class="form-group">
                     <label for="homologacao_anatel">Homologação ANATEL:</label> <select id="homologacao_anatel" name="homologacao_anatel" required>
                         <option value="Sim" <?php echo (isset($aeronave_data['homologacao_anatel']) && $aeronave_data['homologacao_anatel'] == 'Sim') ? 'selected' : ''; ?>>Sim</option>
                         <option value="Não" <?php echo (isset($aeronave_data['homologacao_anatel']) && $aeronave_data['homologacao_anatel'] == 'Não') ? 'selected' : ''; ?>>Não</option>
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function populateSelect(selectElement, optionsArray, selectedValue, addEmptyOption = true, placeholderText = 'Selecione...') {
             selectElement.innerHTML = '';
             if (addEmptyOption) {
-                 selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
+                selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
             }
             if (!optionsArray) return;
             optionsArray.forEach(optionText => {

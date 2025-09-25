@@ -174,9 +174,8 @@ function get_sort_link_piloto($column, $current_column, $current_dir) {
                             <th>
                                 <a href="<?php echo get_sort_link_piloto('posto_graduacao', $sort_by, $sort_dir); ?>">
                                     <?php 
-                                        // CORREÇÃO: Padronização do texto
                                         $posto_label = ($forca_seguranca === 'Polícia Penal' || $forca_seguranca === 'PCPR' || $forca_seguranca === 'Polícia Científica') ? 'Cargo' : 'Posto/Graduação';
-                                        echo $posto_label;
+                                        echo htmlspecialchars($posto_label);
                                     ?> 
                                     <?php echo ($sort_by === 'posto_graduacao') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?>
                                 </a>
@@ -201,12 +200,11 @@ function get_sort_link_piloto($column, $current_column, $current_dir) {
                             <th>
                                 <a href="<?php echo get_sort_link_piloto('crbm_piloto', $sort_by, $sort_dir); ?>">
                                     <?php
-                                        // CORREÇÃO: Padronização do texto
                                         $crbm_label = 'CRBM';
                                         if ($forca_seguranca === 'PMPR') $crbm_label = 'CRPM';
                                         else if ($forca_seguranca === 'Polícia Penal') $crbm_label = 'Região Penal';
                                         else if ($forca_seguranca === 'PCPR' || $forca_seguranca === 'Polícia Científica') $crbm_label = 'Divisão';
-                                        echo $crbm_label;
+                                        echo htmlspecialchars($crbm_label);
                                     ?>
                                     <?php echo ($sort_by === 'crbm_piloto') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?>
                                 </a>
@@ -214,13 +212,12 @@ function get_sort_link_piloto($column, $current_column, $current_dir) {
                             <th>
                                 <a href="<?php echo get_sort_link_piloto('obm_piloto', $sort_by, $sort_dir); ?>">
                                     <?php
-                                        // CORREÇÃO: Padronização do texto
                                         $obm_label = 'OBM';
                                         if ($forca_seguranca === 'PMPR') $obm_label = 'OPM';
                                         else if ($forca_seguranca === 'Polícia Penal') $obm_label = 'Unidade Penal';
                                         else if ($forca_seguranca === 'PCPR') $obm_label = 'Delegacia';
                                         else if ($forca_seguranca === 'Polícia Científica') $obm_label = 'Unidade';
-                                        echo $obm_label;
+                                        echo htmlspecialchars($obm_label);
                                     ?>
                                     <?php echo ($sort_by === 'obm_piloto') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?>
                                 </a>
@@ -250,13 +247,15 @@ function get_sort_link_piloto($column, $current_column, $current_dir) {
                                 <?php endif; ?>
                                 <td><?php echo htmlspecialchars($piloto['codigo_cadastro'] ?? 'N/A'); ?></td>
                                 <td>
-                                    <?php if ($piloto['forca_seguranca'] === 'PMPR'): ?>
-                                        <?php echo htmlspecialchars(preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $piloto['crbm_piloto'] ?? 'N/A')); ?>
-                                    <?php elseif ($piloto['forca_seguranca'] === 'CBMPR'): ?>
-                                        <?php echo htmlspecialchars(preg_replace('/(\d)(CRBM)/', '$1º $2', $piloto['crbm_piloto'] ?? 'N/A')); ?>
-                                    <?php else: ?>
-                                        <?php echo htmlspecialchars($piloto['crbm_piloto'] ?? 'N/A'); ?>
-                                    <?php endif; ?>
+                                    <?php 
+                                        $crbm_piloto_formatado = $piloto['crbm_piloto'] ?? 'N/A';
+                                        if ($piloto['forca_seguranca'] === 'PMPR') {
+                                            $crbm_piloto_formatado = preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $crbm_piloto_formatado);
+                                        } elseif ($piloto['forca_seguranca'] === 'CBMPR') {
+                                            $crbm_piloto_formatado = preg_replace('/(\d)(CRBM)/', '$1º $2', $crbm_piloto_formatado);
+                                        }
+                                        echo htmlspecialchars($crbm_piloto_formatado);
+                                    ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($piloto['obm_piloto'] ?? 'N/A'); ?></td>
                                 <td>
@@ -270,10 +269,11 @@ function get_sort_link_piloto($column, $current_column, $current_dir) {
                                 <?php if (!$isPiloto): ?>
                                     <td>
                                         <?php 
-                                            if ($piloto['tipo_usuario'] == 'super_administrador') {
+                                            $tipo_usuario_texto = $piloto['tipo_usuario'] ?? 'N/A';
+                                            if ($tipo_usuario_texto == 'super_administrador') {
                                                 echo 'Administrador de Sistema';
                                             } else {
-                                                echo htmlspecialchars(ucfirst(str_replace('_', ' ', $piloto['tipo_usuario'] ?? 'N/A')));
+                                                echo htmlspecialchars(ucfirst(str_replace('_', ' ', $tipo_usuario_texto)));
                                             }
                                         ?>
                                     </td>

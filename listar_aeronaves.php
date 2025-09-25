@@ -202,7 +202,7 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
 <div class="main-content">
     <h1>Lista de Aeronaves</h1>
     
-    <?php if(!empty($mensagem_status)) echo $mensagem_status; ?>
+    <?php if(!empty($mensagem_status)) echo $mensagem_status; // Mensagem já está dentro de um div, não precisa de htmlspecialchars aqui ?>
 
     <?php if ($isSuperAdmin): ?>
         <?php if (!empty($aeronaves_agrupadas_fs)): ?>
@@ -240,7 +240,7 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
                                     <td><?php echo htmlspecialchars($aeronave['numero_serie'] ?? 'N/A'); ?></td>
                                     <td>
                                         <?php 
-                                            $crbm_formatado = ($aeronave['forca_seguranca'] === 'PMPR') ? htmlspecialchars(preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $aeronave['crbm'] ?? 'N/A')) : htmlspecialchars(preg_replace('/(\d)(CRBM)/', '$1º $2', $aeronave['crbm'] ?? 'N/A'));
+                                            $crbm_formatado = ($aeronave['forca_seguranca'] === 'PMPR') ? preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $aeronave['crbm'] ?? 'N/A') : preg_replace('/(\d)(CRBM)/', '$1º $2', $aeronave['crbm'] ?? 'N/A');
                                             echo htmlspecialchars($crbm_formatado . ' / ' . ($aeronave['obm'] ?? 'N/A'));
                                         ?>
                                     </td>
@@ -274,8 +274,8 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
                     <h2> 
                         <?php 
                             $forca_seguranca = $aeronaves[0]['forca_seguranca'];
-                            $crbm_obm_formatado = ($forca_seguranca === 'PMPR') ? htmlspecialchars(preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $crbm_obm)) : htmlspecialchars(preg_replace('/(\d)(CRBM)/', '$1º $2', $crbm_obm));
-                            echo $crbm_obm_formatado;
+                            $crbm_obm_formatado = ($forca_seguranca === 'PMPR') ? preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $crbm_obm) : preg_replace('/(\d)(CRBM)/', '$1º $2', $crbm_obm);
+                            echo htmlspecialchars($crbm_obm_formatado);
                         ?>
                     </h2>
                     <table class="data-table">
@@ -383,4 +383,4 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
 <?php
 // 4. INCLUI O RODAPÉ
 require_once 'includes/footer.php';
-?>0
+?>

@@ -100,13 +100,13 @@ if (($isSuperAdmin || $isAdmin) && isset($_GET['delete_id'])) {
             }
             
             $conn->commit();
-            $mensagem_status = "<div class='success-message-box'>Missão #" . $missao_id_para_excluir . " e todos os seus dados foram excluídos com sucesso.</div>";
+            $mensagem_status = "<div class='success-message-box'>Missão #" . htmlspecialchars($missao_id_para_excluir) . " e todos os seus dados foram excluídos com sucesso.</div>";
         } else {
             throw new Exception("Missão não encontrada.");
         }
     } catch (Exception $e) {
         $conn->rollback();
-        $mensagem_status = "<div class='error-message-box'>Erro ao excluir a missão: " . $e->getMessage() . "</div>";
+        $mensagem_status = "<div class='error-message-box'>Erro ao excluir a missão: " . htmlspecialchars($e->getMessage()) . "</div>";
     }
 }
 
@@ -242,14 +242,14 @@ function formatarTempoVoo($segundos) {
                 <?php if (!empty($missoes)): ?>
                     <?php foreach ($missoes as $missao): ?>
                         <tr>
-                            <td style="text-align: center;"><?php echo date("d/m/Y", strtotime($missao['data'])); ?></td>
+                            <td style="text-align: center;"><?php echo htmlspecialchars(date("d/m/Y", strtotime($missao['data']))); ?></td>
                             <td style="text-align: center;"><?php echo htmlspecialchars($missao['aeronave_prefixo']); ?></td>
-                            <td style="text-align: center;"><?php echo $missao['pilotos_nomes'] ?? 'Nenhum piloto associado'; ?></td>
+                            <td style="text-align: center;"><?php echo $missao['pilotos_nomes'] ?? 'Nenhum piloto associado'; // Mantido para renderizar <br> ?></td>
                             <td style="text-align: center;">
                                 <strong><?php echo htmlspecialchars($missao['rgo_ocorrencia'] ?? 'MISSÃO SEM RGO'); ?></strong><br>
                                 <small><?php echo htmlspecialchars($missao['descricao_operacao']); ?></small>
                             </td>
-                            <td style="text-align: center;"><?php echo formatarTempoVoo($missao['total_tempo_voo']); ?></td>
+                            <td style="text-align: center;"><?php echo htmlspecialchars(formatarTempoVoo($missao['total_tempo_voo'])); ?></td>
                             <td class="action-buttons">
                                 <a href="ver_missao.php?id=<?php echo $missao['id']; ?>" class="edit-btn">Ver Detalhes</a>
                                 <?php if ($isSuperAdmin || $isAdmin): ?>
