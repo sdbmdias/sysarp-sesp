@@ -1,0 +1,8 @@
+   - name: �� Sync files
+     uses: SamKirkland/FTP-Deploy-Action@4.0.0
+     with:
+       server: ${{ secrets.FTP_SERVER }}  # <-- ESTE É O PARÂMETRO QUE ESTÁ FALTANDO!
+       username: ${{ secrets.FTP_USERNAME }}
+       password: ${{ secrets.FTP_PASSWORD }}
+       local-dir: ./caminho/para/seus/arquivos/ # Caminho local dos arquivos a serem enviados
+       server-dir: /caminho/no/servidor/      # Caminho no servidor FTP
