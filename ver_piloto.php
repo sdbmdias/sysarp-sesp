@@ -1,0 +1,137 @@
+<?php
+// 1. INCLUI O CABEÇALHO PADRÃO
+require_once 'includes/header.php';
+
+// 2. VERIFICAÇÃO DE PERMISSÃO
+if (!$isAdmin && !$isSuperAdmin) {
+    header("Location: dashboard.php");
+    exit();
+}
+
+// 3. LÓGICA ESPECÍFICA DA PÁGINA
+$mensagem_status = "";
+$piloto_data = null;
+$piloto_id = isset($_GET['id']) ? intval($_GET['id']) : null;
+
+if (!$piloto_id) {
+    $mensagem_status = "<div class='error-message-box'>ID do piloto não fornecido.</div>";
+} else {
+    // Busca todas as informações do piloto
+    $stmt_load = $conn->prepare("SELECT * FROM pilotos WHERE id = ?");
+    $stmt_load->bind_param("i", $piloto_id);
+    $stmt_load->execute();
+    $result = $stmt_load->get_result();
+
+    if ($result->num_rows === 1) {
+        $piloto_data = $result->fetch_assoc();
+    } else {
+        $mensagem_status = "<div class='error-message-box'>Piloto não encontrado.</div>";
+    }
+    $stmt_load->close();
+}
+?>
+
+<div class="main-content">
+    <h1>Detalhes do Piloto</h1>
+
+    <?php echo $mensagem_status; ?>
+
+    <?php if ($piloto_data): ?>
+    <div class="form-container">
+        <div class="detail-grid">
+            <div class="detail-group">
+                <label>Posto/Graduação:</label>
+                <span><?php echo htmlspecialchars($piloto_data['posto_graduacao'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Nome Completo:</label>
+                <span><?php echo htmlspecialchars($piloto_data['nome_completo'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Nome de Usuário:</label>
+                <span><?php echo htmlspecialchars($piloto_data['nome_usuario'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Código Interno:</label>
+                <span><?php echo htmlspecialchars($piloto_data['codigo_cadastro'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>E-mail:</label>
+                <span><?php echo htmlspecialchars($piloto_data['email'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Telefone:</label>
+                <span><?php echo htmlspecialchars($piloto_data['telefone'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>CRBM:</label>
+                <span><?php echo htmlspecialchars(preg_replace('/(\d)(CRBM)/', '$1º $2', $piloto_data['crbm_piloto'] ?? 'N/A')); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>OBM/Seção:</label>
+                <span><?php echo htmlspecialchars($piloto_data['obm_piloto'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Código SARPAS:</label>
+                <span><?php echo htmlspecialchars($piloto_data['cadastro_sarpas'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>CPARP:</label>
+                <span><?php echo htmlspecialchars($piloto_data['cparp'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Força de Segurança:</label>
+                <span><?php echo htmlspecialchars($piloto_data['forca_seguranca'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Status:</label>
+                <span><?php echo htmlspecialchars($piloto_data['status_piloto'] ?? 'N/A'); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Tipo de Usuário:</label>
+                <span><?php echo htmlspecialchars(ucfirst($piloto_data['tipo_usuario'] ?? 'N/A')); ?></span>
+            </div>
+            <div class="detail-group">
+                <label>Informações Adicionais:</label>
+                <span><?php echo nl2br(htmlspecialchars($piloto_data['info_adicionais'] ?? 'N/A')); ?></span>
+            </div>
+        </div>
+        <div class="form-actions" style="text-align: left;">
+            <a href="listar_pilotos.php" class="btn-primary" style="background-color: var(--color-sidebar-bg);">Voltar para a Lista</a>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+
+<style>
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .detail-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .detail-group label {
+        font-weight: bold;
+        color: var(--color-text-medium);
+        margin-bottom: 5px;
+    }
+    .detail-group span {
+        background-color: #f9f9f9;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    @media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<?php
+// 4. INCLUI O RODAPÉ
+require_once 'includes/footer.php';
+?>

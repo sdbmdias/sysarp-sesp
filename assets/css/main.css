@@ -1,0 +1,482 @@
+/* Path: assets/css/main.css */
+
+:root {
+    /* Cores Primárias e de Destaque (SOARP Red) */
+    --color-primary: #c0392b; /* Vermelho principal (do logo/botões) */
+    --color-primary-hover: #a93226; /* Vermelho mais escuro para hover */
+
+    /* Cores de Fundo */
+    --color-background-light: #f0f2f5; /* Cor de fundo principal do body */
+    --color-content-bg-translucent-heavy: rgba(255, 255, 255, 0.85); /* Fundo de caixas de conteúdo com alta transparência */
+    --color-content-bg-translucent-light: rgba(255, 255, 255, 0.3); /* Overlay com baixa transparência */
+    --color-white: white; /* Cor branca pura */
+
+    /* Cores de Texto */
+    --color-text-dark: #333; /* Texto principal escuro */
+    --color-text-medium: #555; /* Texto secundário e labels */
+    --color-text-light: #888; /* Ícones, placeholders */
+    --color-text-lighter: #666; /* Texto informativo (ex: "Seção Operacional...") */
+    --color-text-sidebar: var(--color-white); /* Texto da sidebar (mantido branco para contraste) */
+    --color-text-alert: #e74c3c; /* Texto de alerta */
+
+    /* Cores de Borda e Sombras */
+    --color-border-light: #ddd; /* Bordas de inputs */
+    --color-border-table: #eee; /* Bordas de tabelas */
+    --color-box-shadow-light: rgba(0, 0, 0, 0.1); /* Sombra leve */
+    --color-box-shadow-medium: rgba(0, 0, 0, 0.15); /* Sombra média */
+
+    /* Cores de Mensagens e Status */
+    --color-success-background: #d4edda;
+    --color-success-text: #155724;
+    --color-success-border: #c3e6cb;
+
+    --color-error-background: #f8d7da;
+    --color-error-text: #721c24;
+    --color-error-border: #f5c6cb;
+
+    --color-status-active: #28a745; /* Ativo (verde) */
+    --color-status-maintenance: #ffc107; /* Em manutenção (amarelo) */
+    --color-status-inactive: #dc3545; /* Baixada/Desativado (vermelho) */
+    --color-status-added: #007bff; /* Adida (azul) */
+
+    /* Cores do Sidebar (AJUSTADAS PARA TONS DE VERMELHO) */
+    --color-sidebar-bg: #661C16; /* Um vermelho bem escuro para o fundo da sidebar */
+    --color-sidebar-item-hover-bg: var(--color-primary-hover); /* Vermelho de hover para itens do menu */
+    --color-sidebar-item-active-border: var(--color-primary); /* Vermelho principal para a borda do item ativo */
+    --color-submenu-bg: #7A211B; /* Vermelho escuro um pouco mais claro para o submenu */
+    --color-submenu-item-hover-bg: var(--color-primary); /* Vermelho principal para hover de itens do submenu */
+    --color-user-role-border: #8A312B; /* Borda avermelhada para o display de perfil */
+}
+
+/* Estilos Específicos para a Força PMPR */
+body.theme-pmpr {
+    --color-sidebar-bg: #f1ca24;
+    --color-text-sidebar: #000;
+    --color-sidebar-item-hover-bg: #e6e600;
+    --color-sidebar-item-active-border: #000;
+    --color-submenu-bg: #f5f54b;
+    --color-submenu-item-hover-bg: #e6e600;
+    --color-user-role-border: #e6e600;
+}
+
+/* Estilos Específicos para a Força CBMPR (padrão) */
+body.theme-cbmpr {
+    --color-sidebar-bg: #d52027;
+    --color-text-sidebar: #fff;
+    --color-sidebar-item-hover-bg: #a93226;
+    --color-sidebar-item-active-border: #fff;
+    --color-submenu-bg: #bb282e;
+    --color-submenu-item-hover-bg: #a93226;
+    --color-user-role-border: #e74c3c;
+}
+
+/* Estilos Específicos para a Força Polícia Penal */
+body.theme-policia-penal {
+    --color-sidebar-bg: #858484;
+    --color-text-sidebar: #000;
+    --color-sidebar-item-hover-bg: #757575;
+    --color-sidebar-item-active-border: #000;
+    --color-submenu-bg: #999999;
+    --color-submenu-item-hover-bg: #757575;
+    --color-user-role-border: #666666;
+}
+
+/* Estilos Globais para o Body e Elementos Comuns */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--color-background-light);
+    color: var(--color-text-dark);
+    overflow-y: auto; /* ALTERADO: Permite rolagem vertical */
+    font-size: 18px; /* ALTERADO: AUMENTADO PARA 18PX */
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos de Botões Genéricos (usados em formulários) */
+button[type="submit"], .btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+button[type="submit"]:hover, .btn-primary:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Novo estilo para botões de ação específicos (ex: Gerar PDF) */
+.btn-pdf-action {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    text-decoration: none;
+    padding: 8px 12px; /* Padding menor para botões de ação */
+    border-radius: 5px;
+    display: inline-block; /* Para que padding e margin funcionem corretamente em links */
+    font-size: 0.9em; /* Um pouco menor que o texto base do site */
+    transition: background-color 0.3s ease;
+}
+
+.btn-pdf-action:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Estilos de Input Genéricos */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+    width: calc(100% - 22px); /* Ajuste para padding */
+    padding: 10px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+    color: var(--color-text-dark);
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    /* Exemplo de sombra usando rgba do primary, se você definir RGB: */
+    /* box-shadow: 0 0 5px rgba(var(--color-primary-rgb), 0.5); */
+}
+
+/* Containers de Formulários e Tabelas */
+.form-container, .table-container {
+    background-color: var(--color-white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px var(--color-box-shadow-light);
+    max-width: 100%;
+    margin: auto;
+    overflow-x: auto;
+}
+
+/* Mensagens de Sucesso e Erro */
+.success-message-box {
+    background-color: var(--color-success-background);
+    color: var(--color-success-text);
+    border: 1px solid var(--color-success-border);
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 2px 5px var(--color-box-shadow-light);
+    opacity: 1;
+    transition: opacity .5s ease-out 3s;
+}
+
+.error-message-box {
+    background-color: var(--color-error-background);
+    color: var(--color-error-text);
+    border: 1px solid var(--color-error-border);
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 2px 5px var(--color-box-shadow-light);
+    opacity: 1;
+    transition: opacity .5s ease-out 3s;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: var(--color-sidebar-bg); /* AJUSTADO */
+    color: var(--color-text-sidebar);
+    padding-top: 20px;
+    box-shadow: 2px 0 5px var(--color-box-shadow-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s ease;
+    z-index: 1001;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    flex-grow: 1;
+}
+
+.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: var(--color-text-sidebar);
+    text-decoration: none;
+    font-size: 18px; /* Mantido em PX para não ser afetado pelo font-size do body */
+    line-height: 1.2;
+    transition: background-color .3s ease;
+}
+
+.sidebar ul li a i {
+    margin-right: 15px;
+    font-size: 20px;
+    width: 25px;
+    text-align: center;
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li a.active {
+    background-color: var(--color-sidebar-item-hover-bg); /* AJUSTADO */
+    border-left: 5px solid var(--color-sidebar-item-active-border); /* AJUSTADO */
+    padding-left: 15px;
+}
+
+.menu-alert {
+    color: var(--color-text-alert) !important;
+    font-weight: 700;
+}
+
+.sidebar ul li.has-submenu > a {
+    position: relative;
+}
+
+.sidebar ul li.has-submenu > a .submenu-arrow {
+    position: absolute;
+    right: 20px;
+    transition: transform .3s ease;
+}
+
+.sidebar ul li.has-submenu.open > a .submenu-arrow {
+    transform: rotate(180deg);
+}
+
+.sidebar ul li .submenu {
+    list-style: none;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s ease-out;
+    background-color: var(--color-submenu-bg); /* AJUSTADO */
+}
+
+.sidebar ul li .submenu li a {
+    padding: 10px 20px 10px 45px;
+    font-size: 17px; /* Mantido em PX para não ser afetado pelo font-size do body */
+    background-color: transparent;
+}
+
+.sidebar ul li .submenu li a:hover,
+.sidebar ul li .submenu li a.active {
+    background-color: var(--color-submenu-item-hover-bg); /* AJUSTADO */
+    border-left: 5px solid var(--color-sidebar-item-active-border); /* AJUSTADO */
+}
+
+.sidebar ul li .submenu.open {
+    max-height: 500px; /* Valor arbitrário grande o suficiente */
+}
+
+/* Conteúdo Principal */
+body .main-content { /* Adicionado body para maior especificidade */
+    flex-grow: 1;
+    padding: 20px;
+    background-color: var(--color-background-light);
+    color: var(--color-text-dark);
+    overflow-y: auto;
+}
+
+.main-content h1 {
+    color: var(--color-sidebar-bg); /* Use a cor de fundo do sidebar para títulos principais */
+    margin-bottom: 20px;
+}
+
+/* Grid de Formulário */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--color-text-medium);
+}
+
+.form-group select:disabled {
+    background-color: var(--color-background-light); /* Cor para campos desabilitados */
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    text-align: right;
+    padding-top: 20px;
+}
+
+.form-actions button[type="submit"] {
+    background-color: var(--color-status-active); /* Cor verde para botões de sucesso/salvar */
+}
+
+.form-actions button[type="submit"]:hover {
+    background-color: #218838; /* Um verde ligeiramente mais escuro para hover */
+}
+
+.form-actions button:disabled {
+    background-color: #a5d6a7; /* Um verde mais claro para desabilitado */
+    cursor: not-allowed;
+}
+
+/* Tabela de Dados */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.data-table th, .data-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--color-border-table);
+    text-align: center;
+    color: var(--color-text-medium);
+    font-size: .9em; /* Este continuará relativo ao body, ou seja, 0.9 * 18px = 16.2px */
+    vertical-align: middle;
+}
+
+.data-table th {
+    background-color: #f8f8f8; /* Fundo do cabeçalho da tabela */
+    font-weight: 700;
+    color: var(--color-sidebar-bg); /* Cor do texto do cabeçalho */
+}
+
+.data-table tbody tr:hover {
+    background-color: #f5f5f5; /* Hover em linhas da tabela */
+}
+
+.action-buttons a {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 2px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--color-white);
+    font-size: .85em; /* Este continuará relativo ao body, ou seja, 0.85 * 18px = 15.3px */
+}
+
+.action-buttons .edit-btn {
+    background-color: var(--color-status-added); /* Azul para botão de editar */
+}
+
+/* Status (Cores Específicas) */
+.status-ativo { color: var(--color-status-active); font-weight: 700; }
+.status-em_manutencao, .status-afastado { color: var(--color-status-maintenance); font-weight: 700; }
+.status-baixada, .status-desativado { color: var(--color-status-inactive); font-weight: 700; }
+.status-adida { color: var(--color-status-added); font-weight: 700; }
+
+/* Display de Perfil do Usuário no Sidebar */
+.user-role-display {
+    padding: 15px 20px;
+    text-align: center;
+    color: var(--color-user-role-text-light);
+    font-size: 14px; /* Mantido em PX */
+    line-height: 1.4;
+    border-top: 1px solid var(--color-user-role-border); /* AJUSTADO */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.user-role-display p { margin: 0; }
+.user-role-display strong { color: var(--color-text-sidebar); font-size: 15px; } /* Mantido em PX */
+
+/* Mobile Header e Overlay */
+.mobile-header {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-sidebar-bg); /* AJUSTADO */
+    color: var(--color-text-sidebar);
+    padding: 10px 15px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    box-sizing: border-box;
+}
+
+.overlay { display: none; } /* Padrão: oculto */
+
+/* ########## MEDIA QUERIES PARA RESPONSIVIDADE ########## */
+
+@media (max-width: 768px) {
+    body { flex-direction: column; }
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        transform: translateX(-250px);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .main-content {
+        width: 100%;
+        padding-top: 70px;
+        box-sizing: border-box;
+    }
+    .mobile-header {
+        display: flex;
+    }
+    .menu-toggle { font-size: 24px; cursor: pointer; }
+    .mobile-header .page-title { font-size: 18px; color: var(--color-text-sidebar); margin: 0; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-actions { text-align: center; }
+    .form-actions button { width: 100%; }
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+    .overlay.active {
+        display: block;
+    }
+}
+@media print { .no-print { display: none !important; } }

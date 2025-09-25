@@ -1,0 +1,140 @@
+{
+  "CBMPR": {
+    "nome": "Corpo de Bombeiros Militar do Paraná",
+    "sigla": "CBMPR",
+    "posto_graduacao_label": "Posto/Graduação",
+    "crbm_label": "CRBM",
+    "obm_label": "OBM/Seção",
+    "cparp_label": "CPARP",
+    "codigo_prefixo": "BM",
+    "postos_graduacoes": [
+      "Cel. QOBM", "Ten. Cel. QOBM", "Maj. QOBM", "Cap. QOBM", "1º Ten. QOBM", "2º Ten. QOBM", "Asp. Oficial",
+      "Sub. Ten. QPBM", "1º Sgt. QPBM", "2º Sgt. QPBM", "3º Sgt. QPBM", "Cb. QPBM", "Sd. QPBM"
+    ],
+    "unidades": {
+      "CCB": ["BM-1", "BM-2", "BM-3", "BM-4", "BM-5", "BM-6", "BM-7", "BM-8"],
+      "BOA": ["SOARP"],
+      "GOST": ["GOST"],
+      "1º CRBM": ["1º BBM", "6º BBM", "7º BBM", "8º BBM"],
+      "2º CRBM": ["3º BBM", "11º BBM", "1ª CIBM"],
+      "3º CRBM": ["4º BBM", "9º BBM", "10º BBM", "13º BBM"],
+      "4º CRBM": ["5º BBM", "2ª CIBM", "4ª CIBM", "5ª CIBM"]
+    }
+  },
+  "PMPR": {
+    "nome": "Polícia Militar do Paraná",
+    "sigla": "PMPR",
+    "posto_graduacao_label": "Posto/Graduação",
+    "crbm_label": "CRPM",
+    "obm_label": "OPM/Seção",
+    "cparp_label": "CPARP",
+    "codigo_prefixo": "PM",
+    "postos_graduacoes": [
+      "Cel. QOPM", "Ten. Cel QOPM", "Cap. QOPM", "2º Ten. QOPM", "1º Ten. QOPM",
+      "Aspirante a Oficial", "Sub. Ten. QPM 1-0", "1º Sgt. QPM 1-0",
+      "2º Sgt. QPM 1-0", "3º Sgt. QPM 1-0", "Cb. QPM 1-0", "Sd. QPM 1-0"
+    ],
+    "unidades": {
+      "crpms": [
+        "1º CRPM", "2º CRPM", "3º CRPM", "4º CRPM", "5º CRPM", "6º CRPM",
+        "CME", "CPE"
+      ],
+      "opms_por_crpm": {
+        "1º CRPM": ["12º BPM", "13º BPM", "20º BPM", "23º BPM"],
+        "2º CRPM": ["2º BPM", "5º BPM", "10º BPM", "15º BPM", "18º BPM", "30º BPM", "6ª CIPM", "11ª CIPM"],
+        "3º CRPM": ["4º BPM", "8º BPM", "7º BPM", "11º BPM", "25º BPM", "32º BPM", "3ª CIPM", "5ª CIPM", "9ª CIPM"],
+        "4º CRPM": ["1º BPM", "16º BPM", "26º BPM", "27º BPM", "8ª CIPM", "10ª CIPM"],
+        "5º CRPM": ["3º BPM", "6º BPM", "14º BPM", "19º BPM", "21º BPM", "31º BPM", "12ª CIPM"],
+        "6º CRPM": ["9º BPM", "17º BPM", "22º BPM", "28º BPM", "29º BPM"],
+        "CME": ["BOPE", "BPMOA", "BPFron", "BPChoque", "BPRONE", "CIROCAM"],
+        "CPE": ["RPMon", "BPRv", "BPTran", "BPAmb.", "COPOM", "BPEC"]
+      }
+    }
+  },
+  "Polícia Penal": {
+    "nome": "Polícia Penal do Paraná",
+    "sigla": "PPPR",
+    "posto_graduacao_label": "Cargo",
+    "crbm_label": "Região Penal",
+    "obm_label": "Unidade Penal",
+    "cparp_label": "COARP",
+    "codigo_prefixo": "PP",
+    "postos_graduacoes": [
+      "Policial Penal"
+    ],
+    "unidades": {
+      "Regional de Curitiba": ["CPRN", "PISP", "PAM R1 PIRAQUARA", "PAM PARANAGUÁ", "PAM R1", "ESPEN", "CPARAU", "CPCTBA", "CPAI", "PEP II", "PEP I", "PCE – UP", "CIS", "PFP", "CMP"],
+      "Regional de Ponta Grossa": ["PEPG II – US", "PAM JAGUARIAÍVA", "PAM R2", "PAM LAPA", "CPWEB", "CPBORB", "CPSENG", "CPORT", "CPJAGU", "CPCAST", "CPAPOT", "UPPG", "PEPG – US", "CRSL"],
+      "Regional de Guarapuava": ["CPMRIBA", "CPPINH", "PAM R3", "CPLARA", "CPPRUD", "CPRES", "CPPTGA", "CPGPVA", "CPSMS", "PEG-UP", "PIG", "COMPLEXO SOCIAL DE GUARAPUAVA"],
+      "Regional de Londrina": ["PEL III", "PAM JACAREZINHO", "PAM CORNÉLIO PROCÓPIO", "ESOCIAL", "PAM APUCARANA", "PAM R4", "CPPORE", "CPBAND", "CPCAR", "CPFAX", "CPPLAT", "CPRDIA", "CITL", "CLDA", "CPJACA"],
+      "Regional de Maringá": ["CPMGÚ", "CENTRAL DE CREDENCIAIS E VISITAS", "CPPNC", "PAM PARANAVAÍ", "PAM MARINGÁ – PAM R5", "CPEB", "CPMAR", "CPNOVALON", "CPSARA", "CPPVAI", "CPNE", "CPMAGA", "CPMAG", "CPJANDA", "CPCOL"],
+      "Regional de Cruzeiro do Oeste": ["PEG", "PAM CRUZEIRO DO OESTE – PAM R6", "CPALTO", "CPCGA", "CPUMUA", "CPLOAN", "CPIPOR", "CPGOIO", "CPCIAN", "PCM", "CPCM I", "PECO", "COMPLEXO SOCIAL DE CRUZEIRO DO OESTE", "COMPLEXO SOCIAL DE CAMPO MOURÃO"],
+      "Regional de Francisco Beltrão": ["PAM UNIÃO DA VITÓRIA", "PAM R7", "CPPB", "CPPALM", "CPBEL", "CPSAS", "CPDOISV", "PEFB", "COMPLEXO SOCIAL DE FRANCISCO BELTRÃO"],
+      "Regional de Cascavel": ["CPCLAG", "PAM R8", "CPQUED", "CPCORB", "CPTOLE", "CPMRON", "CPTOC", "CPCAS", "PETBC", "PIMP – UP", "COMPLEXO SOCIAL DE TOLEDO", "COMPLEXO SOCIAL DE CASCAVEL"],
+      "Regional de Foz do Iguaçu": ["PEF III", "PEF IV", "PAM R9", "CPMEDI", "CPPALO", "CPASSCH", "PEF II", "PFF – UP", "CPLN", "PEF", "COMPLEXO SOCIAL DE FOZ DO IGUAÇU"],
+      "Sede Administrativa Polícia Penal do Paraná": ["Sede"],
+      "DOA": ["Divisão de Operações Aéreas da Polícia Penal"]
+    }
+  },
+  "PCPR": {
+    "nome": "Polícia Civil do Paraná",
+    "sigla": "PCPR",
+    "posto_graduacao_label": "Cargo",
+    "crbm_label": "Divisão",
+    "obm_label": "Delegacia",
+    "cparp_label": "Curso de Capacitação",
+    "codigo_prefixo": "PC",
+    "postos_graduacoes": [
+      "Delegado de Polícia", "Investigador de Polícia", "Escrivão de Polícia", "Papiloscopista"
+    ],
+    "unidades": {
+      "Centro de Operações Policiais Especiais (COPE)": [ "Centro de Operações Policiais Especiais (COPE)" ],
+      "Divisão Policial da Capital (DPCAP)": [ "1º Distrito", "2º Distrito", "3º Distrito", "4º Distrito", "5º Distrito", "6º Distrito", "7º Distrito", "8º Distrito" ],
+      "Divisão Policial do Interior (DPI)": [
+        "1ª SDP - Paranaguá", "2ª SDP - Laranjeiras do Sul", "3ª SDP - São Mateus do Sul", "4ª SDP - União da Vitória",
+        "5ª SDP - Pato Branco", "6ª SDP - Foz do Iguaçu", "7ª SDP - Umuarama", "8ª SDP - Paranavaí",
+        "9ª SDP - Maringá", "10ª SDP - Londrina", "11ª SDP - Cornélio Procópio", "12ª SDP - Jacarezinho",
+        "13ª SDP - Ponta Grossa", "14ª SDP - Guarapuava", "15ª SDP - Cascavel", "16ª SDP - Campo Mourão",
+        "17ª SDP - Apucarana", "18ª SDP - Telêmaco Borba", "19ª SDP - Francisco Beltrão", "20ª SDP - Toledo",
+        "21ª SDP - Cianorte", "22ª SDP - Arapongas", "23ª SDP - Ivaiporã", "24ª SDP - Bandeirantes"
+      ],
+      "Divisão de Polícia Metropolitana (DPMETRO)": [
+        "Central de Flagrantes da Região Metropolitana", "Delegacia de Almirante Tamandaré", "Delegacia de Araucária",
+        "Delegacia de Bocaiúva do Sul", "Delegacia de Campo Largo", "Delegacia de Colombo", "Delegacia de Fazenda Rio Grande",
+        "Delegacia de Pinhais", "Delegacia de Piraquara", "Delegacia de Quatro Barras", "Delegacia de Rio Branco do Sul",
+        "Delegacia de São José dos Pinhais"
+      ],
+      "Divisão Estadual de Narcóticos (DENARC)": [ "Sede" ],
+      "Divisão Estadual de Combate à Corrupção (DECCOR)": [ "Núcleo de Curitiba", "Núcleo de Cascavel", "Núcleo de Foz do Iguaçu", "Núcleo de Londrina" ],
+      "Núcleo de Combate aos Cibercrimes (NUCIBER)": [ "Sede" ],
+      "Serviço de Investigação de Crianças Desaparecidas (SICRIDE)": [ "Sede" ],
+      "Tático Integrado de Grupos de Repressão Especial (TIGRE)": [ "TIGRE" ],
+      "Núcleo Auxiliar de Controle Interno (NACI)": [ "Sede" ]
+    }
+  },
+  "Polícia Científica": {
+    "nome": "Polícia Científica do Paraná",
+    "sigla": "PCIEN",
+    "posto_graduacao_label": "Cargo",
+    "crbm_label": "Divisão",
+    "obm_label": "Unidade",
+    "cparp_label": "Curso de Capacitação",
+    "codigo_prefixo": "PCIEN",
+    "postos_graduacoes": [
+      "Perito Oficial", "Auxiliar de Perícia"
+    ],
+    "unidades": {
+      "Diretoria de Operações": [
+        "UETC Tarumã", "UETC Cascavel", "UETC Foz do Iguaçu", "UETC Francisco Beltrão", "UETC Guarapuava",
+        "UETC Ivaiporã", "UETC Londrina", "UETC Maringá", "UETC Paranaguá", "UETC Paranavaí",
+        "UETC Pato Branco", "UETC Ponta Grossa", "UETC Toledo", "UETC Telêmaco Borba", "UETC Umuarama",
+        "UETC União da Vitória"
+      ],
+      "Divisão Administrativa": [ "Sede" ],
+      "Divisão de Custódia e Vestígio": [ "Sede" ],
+      "Divisão de Tecnologia": [ "Sede" ],
+      "Academia de Ciências Forenses": [ "Sede" ],
+      "Museu Paranaense de Ciências Forenses": [ "Sede" ]
+    }
+  }
+}
