@@ -14,22 +14,22 @@ $mensagem_status = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Coleta dos dados do formulário
-    $forca_seguranca = htmlspecialchars($_POST['forca_seguranca']);
-    $posto_graduacao = htmlspecialchars($_POST['posto_graduacao']);
-    $nome_completo = htmlspecialchars($_POST['nome_completo']);
-    $email = htmlspecialchars($_POST['email']);
-    $telefone = htmlspecialchars($_POST['telefone']);
-    $crbm_piloto = htmlspecialchars($_POST['crbm_piloto']);
-    $obm_piloto = htmlspecialchars($_POST['obm_piloto']);
-    $cadastro_sarpas = htmlspecialchars($_POST['cadastro_sarpas']);
-    $cparp = htmlspecialchars($_POST['cparp']);
-    $status_piloto = htmlspecialchars($_POST['status_piloto']);
-    $info_adicionais_piloto = htmlspecialchars($_POST['info_adicionais_piloto']);
+    $forca_seguranca = $_POST['forca_seguranca'];
+    $posto_graduacao = $_POST['posto_graduacao'];
+    $nome_completo = $_POST['nome_completo'];
+    $email = $_POST['email'];
+    $telefone = $_POST['telefone'];
+    $crbm_piloto = $_POST['crbm_piloto'];
+    $obm_piloto = $_POST['obm_piloto'];
+    $cadastro_sarpas = $_POST['cadastro_sarpas'];
+    $cparp = $_POST['cparp'];
+    $status_piloto = $_POST['status_piloto'];
+    $info_adicionais_piloto = $_POST['info_adicionais_piloto'];
     $senha = $_POST['senha'];
-    $nome_usuario = htmlspecialchars($_POST['nome_usuario']);
+    $nome_usuario = $_POST['nome_usuario'];
     
     // Define o tipo de usuário com base na permissão do usuário logado
-    $tipo_usuario_input = htmlspecialchars($_POST['tipo_usuario']);
+    $tipo_usuario_input = $_POST['tipo_usuario'];
     $tipo_usuario = ($isSuperAdmin) ? $tipo_usuario_input : 'piloto';
 
     // Lógica para gerar o número de cadastro
@@ -327,8 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
         field.addEventListener('change', checkFormValidity);
     });
 
-    // ######### INÍCIO DA CORREÇÃO #########
-    
     // Anexa o evento de mudança para Super Admins que selecionam manualmente
     if (forcaSegurancaSelect) {
         forcaSegurancaSelect.addEventListener('change', handleForcaSegurancaChange);
@@ -339,8 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // os campos dependentes (Posto/Graduação, etc.) sejam populados corretamente.
     handleForcaSegurancaChange();
     
-    // ######### FIM DA CORREÇÃO #########
-
     checkFormValidity();
 });
 </script>

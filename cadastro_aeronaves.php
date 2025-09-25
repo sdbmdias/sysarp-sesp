@@ -58,7 +58,9 @@ if ($result_used_prefixes) {
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // ... (Seu PHP para salvar o formulário permanece aqui)
+    // A lógica de salvamento do formulário vai aqui.
+    // Como o foco é a correção do formulário em si, esta parte é omitida,
+    // mas ela deve usar prepared statements e validação de dados.
 }
 ?>
 
