@@ -30,23 +30,38 @@ if ($result_aeronaves) {
     while($row = $result_aeronaves->fetch_assoc()) { $aeronaves_disponiveis[] = $row; }
 }
 
-// *** INÍCIO DA ALTERAÇÃO: Filtragem dos Tipos de Operação por Força de Segurança ***
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO CORRIGIDA: Lógica de busca dos Tipos de Operação ***
+// A consulta foi reescrita para usar JOIN entre 'tipos_operacao' e 'operacao_forcas'
+// usando a chave estrangeira correta 'operacao_id'.
+// ====================================================================================================
 if ($isSuperAdmin) {
-    // Super Admin vê todas as operações, com a força indicada para clareza
-    $sql_operacoes = "SELECT id, nome, forca_seguranca FROM tipos_operacao ORDER BY forca_seguranca, nome ASC";
+    // Super Admin vê todas as operações, com a força indicada para clareza.
+    $sql_operacoes = "
+        SELECT t.id, t.nome, o.forca_seguranca 
+        FROM tipos_operacao t
+        LEFT JOIN operacao_forcas o ON t.id = o.operacao_id
+        ORDER BY o.forca_seguranca, t.nome ASC
+    ";
     $result_operacoes = $conn->query($sql_operacoes);
 } else {
-    // Outros usuários veem apenas operações da sua força ou as gerais
-    $sql_operacoes = "SELECT id, nome FROM tipos_operacao WHERE forca_seguranca = ? OR forca_seguranca IS NULL ORDER BY nome ASC";
+    // Outros usuários (Admin/Piloto) veem operações da sua força ou as gerais (sem força associada).
+    $sql_operacoes = "
+        SELECT t.id, t.nome 
+        FROM tipos_operacao t
+        LEFT JOIN operacao_forcas o ON t.id = o.operacao_id
+        WHERE o.forca_seguranca = ? OR o.forca_seguranca IS NULL
+        GROUP BY t.id, t.nome
+        ORDER BY t.nome ASC
+    ";
     $stmt_operacoes = $conn->prepare($sql_operacoes);
-    $stmt_operacoes->bind_param("s", $user_forca_seguranca); // $user_forca_seguranca vem do header.php
+    $stmt_operacoes->bind_param("s", $user_forca_seguranca); 
     $stmt_operacoes->execute();
     $result_operacoes = $stmt_operacoes->get_result();
 }
 
 if($result_operacoes) {
     while($row = $result_operacoes->fetch_assoc()) { 
-        // Adiciona um nome de exibição para SuperAdmins para dar contexto
         if ($isSuperAdmin && !empty($row['forca_seguranca'])) {
             $row['nome_exibicao'] = $row['nome'] . ' (' . $row['forca_seguranca'] . ')';
         } else {
@@ -58,7 +73,10 @@ if($result_operacoes) {
 if (isset($stmt_operacoes)) {
     $stmt_operacoes->close();
 }
-// *** FIM DA ALTERAÇÃO ***
+// ====================================================================================================
+// *** FIM DA SEÇÃO CORRIGIDA ***
+// ====================================================================================================
+
 
 // --- Lógica de submissão do formulário (sem alterações) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -179,11 +197,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <label for="descricao_operacao">Descrição da Operação:</label>
                         <select id="descricao_operacao" name="descricao_operacao" required>
                             <option value="">Selecione o Tipo</option>
-                            <?php // *** INÍCIO DA ALTERAÇÃO: Loop de exibição das operações filtradas *** ?>
                             <?php foreach($tipos_operacao as $tipo): ?>
                                 <option value="<?php echo htmlspecialchars($tipo['nome']); ?>"><?php echo htmlspecialchars($tipo['nome_exibicao']); ?></option>
                             <?php endforeach; ?>
-                            <?php // *** FIM DA ALTERAÇÃO *** ?>
                         </select>
                     </div>
                     <div class="form-group">

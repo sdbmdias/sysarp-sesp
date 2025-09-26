@@ -141,5 +141,31 @@
       "Academia de Ciências Forenses": [ "Sede" ],
       "Museu Paranaense de Ciências Forenses": [ "Sede" ]
     }
-  }
-}
+  },
+   "Defesa Civil Estadual": {
+    "nome": "Coordenadoria Estadual da Defesa Civil",
+    "sigla": "CEDC",
+    "posto_graduacao_label": "Posto/Graduação",
+    "crbm_label": "NAR",
+    "obm_label": "CORPDEC",
+    "cparp_label": "CPARP",
+    "codigo_prefixo": "DC",
+    "prefixo_aeronave": "ARP DC",
+    "postos_graduacoes": [
+      "Cel. QOBM", "Ten. Cel. QOBM", "Maj. QOBM", "Cap. QOBM", "1º Ten. QOBM", "2º Ten. QOBM", "Asp. Oficial",
+      "Sub. Ten. QPBM", "1º Sgt. QPBM", "2º Sgt. QPBM", "3º Sgt. QPBM", "Cb. QPBM", "Sd. QPBM", "BM RR", "PM RR", "CIVIL"
+    ],
+    "unidades": {
+      "1º NAR": ["1ª CORPDEC - Curitiba"],
+      "2º NAR": ["2ª CORPDEC - Ponta Grossa"],
+      "3º NAR": ["3ª CORPDEC - Londrina", "11ª CORPDEC - Apucarana", "14ª CORPDEC - Ivaiporã", "16ª CORPDEC - Santo Antônio da Platina"],
+      "4º NAR": ["4ª CORPDEC - Cascavel", "9ª CORPDEC - Foz do Iguaçu"],
+      "5º NAR": ["5ª CORPDEC - Maringá", "18ª CORPDEC - Paranavaí"],
+      "6º NAR": ["6ª CORPDEC - São José dos Pinhais", "7ª CORPDEC - Colombo", "8ª CORPDEC - Paranaguá"],
+      "7º NAR": ["15ª CORPDEC - Umuarama", "17ª CORPDEC - Cianorte"],
+      "8º NAR": ["10ª CORPDEC - Francisco Beltrão", "13ª CORPDEC - Pato Branco"],
+      "9º NAR": ["12ª CORPDEC - Guarapuava"],
+      "10º NAR":["19ª CORPDEC - Irati"]           
+    }
+   }
+ }

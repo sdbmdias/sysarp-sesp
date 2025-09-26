@@ -217,7 +217,8 @@ function formatarTempoVoo($segundos) {
         }
         ?>
         <h1>Logbook de Missões<?php echo $title_crbm_suffix; ?></h1>
-        <?php if ($isSuperAdmin || $isAdmin): ?>
+        <?php // *** ALTERAÇÃO APLICADA AQUI *** ?>
+        <?php if ($isSuperAdmin || $isAdmin || $isPiloto): ?>
         <a href="cadastro_missao.php" class="form-actions button" style="text-decoration: none; display: inline-block; padding: 10px 20px; background-color: #28a745; color: #fff;">
             <i class="fas fa-plus"></i> Adicionar Nova Missão
         </a>

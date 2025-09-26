@@ -2,8 +2,8 @@
 require_once 'includes/header.php';
 require_once 'gpx_parser.php';
 
-// Apenas administradores podem aceder a esta página
-if (!$isAdmin) {
+// Apenas Super Administradores ou Administradores podem acessar
+if (!$isSuperAdmin && !$isAdmin) {
     header("Location: listar_missoes.php");
     exit();
 }
@@ -100,7 +100,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['pilotos']) && !empty($
             link_fotos_videos=?, descricao_ocorrido=?, contato_ats=?, contato_ats_outro=?, forma_acionamento=?, forma_acionamento_outro=?,
             altitude_maxima=?, total_distancia_percorrida=?, total_tempo_voo=?, data_primeira_decolagem=?, data_ultimo_pouso=?
             WHERE id=?");
-        $stmt_update->bind_param("isssssssssssdssssi", 
+        
+        $stmt_update->bind_param("isssssssssssddddsi", 
             $aeronave_id, $data, $descricao_operacao, $protocolo_sarpas, $rgo_ocorrencia, $dados_vitima, 
             $link_fotos_videos, $descricao_ocorrido, $contato_ats, $contato_ats_outro, $forma_acionamento, $forma_acionamento_outro,
             $new_altitude, $new_distancia, $new_tempo, $new_decolagem, $new_pouso,
@@ -125,7 +126,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['pilotos']) && !empty($
 
         // 7. Adiciona os novos valores ao logbook da nova aeronave
         $stmt_add_back = $conn->prepare("INSERT INTO aeronaves_logbook (aeronave_id, distancia_total_acumulada, tempo_voo_total_acumulado) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE distancia_total_acumulada = distancia_total_acumulada + VALUES(distancia_total_acumulada), tempo_voo_total_acumulado = tempo_voo_total_acumulado + VALUES(tempo_voo_total_acumulado)");
-        $stmt_add_back->bind_param("idi", $aeronave_id, $new_distancia, $new_tempo);
+        
+        $stmt_add_back->bind_param("idd", $aeronave_id, $new_distancia, $new_tempo);
         $stmt_add_back->execute();
         $stmt_add_back->close();
 
@@ -195,7 +197,24 @@ if($result_operacoes) {
                              <?php endforeach; ?>
                         </select>
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
+                        <label for="forma_acionamento">Forma de Acionamento:</label>
+                        <select id="forma_acionamento" name="forma_acionamento" required onchange="toggleOtherInput(this, 'outro_acionamento_wrapper')">
+                            <option value="Oficial de dia" <?php echo ($missao_data['forma_acionamento'] == 'Oficial de dia') ? 'selected' : ''; ?>>Oficial de dia</option>
+                            <option value="COBOM" <?php echo ($missao_data['forma_acionamento'] == 'COBOM') ? 'selected' : ''; ?>>COBOM</option>
+                            <option value="Chefe de Socorro" <?php echo ($missao_data['forma_acionamento'] == 'Chefe de Socorro') ? 'selected' : ''; ?>>Chefe de Socorro</option>
+                            <option value="Camara Técnica RPAS" <?php echo ($missao_data['forma_acionamento'] == 'Camara Técnica RPAS') ? 'selected' : ''; ?>>Câmara Técnica RPAS</option>
+                            <option value="Comandante da BBM/CRBM" <?php echo ($missao_data['forma_acionamento'] == 'Comandante da BBM/CRBM') ? 'selected' : ''; ?>>Comandante da BBM/CRBM</option>
+                            <option value="BOA/BPMOA/GOA" <?php echo ($missao_data['forma_acionamento'] == 'BOA/BPMOA/GOA') ? 'selected' : ''; ?>>BOA/BPMOA/GOA</option>
+                            <option value="SOARP" <?php echo ($missao_data['forma_acionamento'] == 'SOARP') ? 'selected' : ''; ?>>SOARP</option>
+                            <option value="Outro" <?php echo ($missao_data['forma_acionamento'] == 'Outro') ? 'selected' : ''; ?>>Outro</option>
+                        </select>
+                    </div>
+                    <div id="outro_acionamento_wrapper" class="form-group" style="display: <?php echo ($missao_data['forma_acionamento'] == 'Outro') ? 'block' : 'none'; ?>;">
+                        <label for="forma_acionamento_outro">Descreva qual:</label>
+                        <input type="text" id="forma_acionamento_outro" name="forma_acionamento_outro" value="<?php echo htmlspecialchars($missao_data['forma_acionamento_outro']); ?>">
+                    </div>
+                    <div class="form-group">
                         <label for="rgo_ocorrencia">Nº do RGO:</label>
                         <input type="text" id="rgo_ocorrencia" name="rgo_ocorrencia" value="<?php echo htmlspecialchars($missao_data['rgo_ocorrencia']); ?>">
                     </div>
@@ -203,7 +222,21 @@ if($result_operacoes) {
                         <label for="protocolo_sarpas">Protocolo SARPAS:</label>
                         <input type="text" id="protocolo_sarpas" name="protocolo_sarpas" value="<?php echo htmlspecialchars($missao_data['protocolo_sarpas']); ?>" required>
                     </div>
-                </div>
+                     <div class="form-group">
+                        <label for="contato_ats">Contato com o Orgão ATS:</label>
+                         <select id="contato_ats" name="contato_ats" required onchange="toggleOtherInput(this, 'outro_ats_wrapper')">
+                            <option value="Espaço Aéreo Golf (G)" <?php echo ($missao_data['contato_ats'] == 'Espaço Aéreo Golf (G)') ? 'selected' : ''; ?>>Espaço Aéreo Golf (G)</option>
+                            <option value="Telefonia" <?php echo ($missao_data['contato_ats'] == 'Telefonia') ? 'selected' : ''; ?>>Telefonia</option>
+                            <option value="WhatsApp" <?php echo ($missao_data['contato_ats'] == 'WhatsApp') ? 'selected' : ''; ?>>WhatsApp</option>
+                            <option value="Rádio" <?php echo ($missao_data['contato_ats'] == 'Rádio') ? 'selected' : ''; ?>>Rádio</option>
+                            <option value="Outro" <?php echo ($missao_data['contato_ats'] == 'Outro') ? 'selected' : ''; ?>>Outro</option>
+                        </select>
+                    </div>
+                    <div id="outro_ats_wrapper" class="form-group" style="display: <?php echo ($missao_data['contato_ats'] == 'Outro') ? 'block' : 'none'; ?>;">
+                        <label for="contato_ats_outro">Descreva qual:</label>
+                        <input type="text" id="contato_ats_outro" name="contato_ats_outro" value="<?php echo htmlspecialchars($missao_data['contato_ats_outro']); ?>">
+                    </div>
+                    </div>
                  <div class="form-group" style="grid-column: 1 / -1;">
                     <label for="descricao_ocorrido">Descreva o Ocorrido:</label>
                     <textarea id="descricao_ocorrido" name="descricao_ocorrido" rows="4" required><?php echo htmlspecialchars($missao_data['descricao_ocorrido']); ?></textarea>
@@ -280,6 +313,19 @@ if($result_operacoes) {
 </style>
 
 <script>
+function toggleOtherInput(selectElement, wrapperId) {
+    const wrapper = document.getElementById(wrapperId);
+    const otherInput = wrapper.querySelector('input');
+    if (selectElement.value === 'Outro') {
+        wrapper.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        wrapper.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const gpxInput = document.getElementById('gpx_files');
     const fileListDiv = document.getElementById('file-list');

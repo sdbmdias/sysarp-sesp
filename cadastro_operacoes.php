@@ -11,14 +11,37 @@ if (!$isSuperAdmin) {
 // 3. LÓGICA ESPECÍFICA DA PÁGINA
 $mensagem_status = "";
 
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO CORRIGIDA: Caminho do arquivo JSON ajustado ***
+// ====================================================================================================
+$forcas_config = [];
+$config_error = '';
+// A linha abaixo foi corrigida para incluir a pasta 'includes' no caminho.
+$config_file_path = __DIR__ . '/includes/config_forcas.json'; 
+
+if (file_exists($config_file_path)) {
+    $json_content = file_get_contents($config_file_path);
+    $decoded_json = json_decode($json_content, true);
+
+    if (json_last_error() === JSON_ERROR_NONE) {
+        $forcas_config = $decoded_json;
+    } else {
+        $config_error = 'Erro: O arquivo config_forcas.json está malformado e não pôde ser lido.';
+    }
+} else {
+    $config_error = 'Aviso: O arquivo de configuração config_forcas.json não foi encontrado.';
+}
+// ====================================================================================================
+// *** FIM DA SEÇÃO CORRIGIDA ***
+// ====================================================================================================
+
+
 // Processa o formulário de cadastro
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cadastrar_operacao'])) {
     $nome_operacao = htmlspecialchars(trim($_POST['nome_operacao']));
-    // *** ATUALIZADO: Captura as forças como um array ***
     $forcas_selecionadas = isset($_POST['forcas']) ? $_POST['forcas'] : [];
 
     if (!empty($nome_operacao)) {
-        // Unicidade agora é apenas pelo nome da operação
         $stmt_check = $conn->prepare("SELECT id FROM tipos_operacao WHERE nome = ?");
         $stmt_check->bind_param("s", $nome_operacao);
         $stmt_check->execute();
@@ -27,14 +50,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cadastrar_operacao']))
         if ($result_check->num_rows == 0) {
             $conn->begin_transaction();
             try {
-                // Insere na tabela principal de operações
                 $stmt_insert = $conn->prepare("INSERT INTO tipos_operacao (nome) VALUES (?)");
                 $stmt_insert->bind_param("s", $nome_operacao);
                 $stmt_insert->execute();
                 $operacao_id = $conn->insert_id;
                 $stmt_insert->close();
 
-                // *** NOVO: Insere as associações na tabela operacao_forcas ***
                 if (!empty($forcas_selecionadas)) {
                     $stmt_assoc = $conn->prepare("INSERT INTO operacao_forcas (operacao_id, forca_seguranca) VALUES (?, ?)");
                     foreach ($forcas_selecionadas as $forca) {
@@ -60,13 +81,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cadastrar_operacao']))
     }
 }
 
-// Processa a exclusão (lógica PHP inalterada, o ON DELETE CASCADE cuida das associações)
+// Lógica de exclusão (sem alterações)
 if ($isSuperAdmin && isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
-    // ... (código de verificação de uso e exclusão permanece o mesmo)
+    $stmt_get_nome = $conn->prepare("SELECT nome FROM tipos_operacao WHERE id = ?");
+    $stmt_get_nome->bind_param("i", $delete_id);
+    $stmt_get_nome->execute();
+    $result_get_nome = $stmt_get_nome->get_result();
+    
+    if ($result_get_nome->num_rows > 0) {
+        $operacao = $result_get_nome->fetch_assoc();
+        $nome_operacao_para_verificar = $operacao['nome'];
+        $stmt_check_uso = $conn->prepare("SELECT COUNT(*) as total FROM missoes WHERE descricao_operacao = ?");
+        $stmt_check_uso->bind_param("s", $nome_operacao_para_verificar);
+        $stmt_check_uso->execute();
+        $uso_count = $stmt_check_uso->get_result()->fetch_assoc()['total'];
+        $stmt_check_uso->close();
+
+        if ($uso_count > 0) {
+            $mensagem_status = "<div class='error-message-box'>Não é possível excluir esta operação, pois ela já está vinculada a " . $uso_count . " missão(ões).</div>";
+        } else {
+            $stmt_delete = $conn->prepare("DELETE FROM tipos_operacao WHERE id = ?");
+            $stmt_delete->bind_param("i", $delete_id);
+            if ($stmt_delete->execute()) {
+                $mensagem_status = "<div class='success-message-box'>Tipo de operação excluído com sucesso!</div>";
+            } else {
+                $mensagem_status = "<div class='error-message-box'>Erro ao excluir o tipo de operação.</div>";
+            }
+            $stmt_delete->close();
+        }
+    }
+    $stmt_get_nome->close();
 }
 
-// *** ATUALIZADO: Busca os tipos de operação e concatena as forças associadas ***
+// Busca os tipos de operação para a lista (sem alterações)
 $tipos_operacao = [];
 $sql_operacoes = "
     SELECT 
@@ -85,6 +133,31 @@ if ($result_operacoes && $result_operacoes->num_rows > 0) {
     }
 }
 ?>
+<style>
+.badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 700; color: #fff; white-space: nowrap; vertical-align: middle; }
+.badge i { margin-right: 4px; }
+/* Estilos para o novo layout de checkboxes */
+.checkbox-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; }
+.checkbox-item { display: flex; align-items: center; }
+.checkbox-item input[type="checkbox"] { margin-right: 10px; width: 1.2em; height: 1.2em; }
+.checkbox-item label { 
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+/* Feedback visual para item selecionado */
+.checkbox-item input[type="checkbox"]:checked + label {
+    background-color: #e0f7ff;
+    color: #0056b3;
+    font-weight: 600;
+    border-color: #007bff;
+}
+</style>
 
 <div class="main-content">
     <h1>Cadastro de Tipos de Operação</h1>
@@ -95,22 +168,33 @@ if ($result_operacoes && $result_operacoes->num_rows > 0) {
     <div class="form-container" style="margin-bottom: 40px;">
         <h2>Adicionar Novo Tipo</h2>
         <form action="cadastro_operacoes.php" method="POST">
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-grid" style="grid-template-columns: 1fr; gap: 20px;">
                 <div class="form-group">
                     <label for="nome_operacao">Nome do Tipo de Operação:</label>
                     <input type="text" id="nome_operacao" name="nome_operacao" placeholder="Ex: Busca e Salvamento" required>
                 </div>
                 <div class="form-group">
-                    <label for="forcas">Atribuir a Forças Específicas:</label>
-                    <select id="forcas" name="forcas[]" multiple style="height: 100px;">
-                        <option value="PMPR">PMPR</option>
-                        <option value="CBMPR">CBMPR</option>
-                        <option value="Polícia Penal">Polícia Penal</option>
-                    </select>
-                    <small>Segure CTRL (ou Command no Mac) para selecionar várias. Se nenhuma for selecionada, será uma operação "Geral".</small>
+                    <label>Atribuir a Forças Específicas:</label>
+                    
+                    <?php if (!empty($config_error)): ?>
+                        <div class="error-message-box"><?php echo $config_error; ?></div>
+                    <?php elseif (!empty($forcas_config)): ?>
+                        <div class="checkbox-container">
+                            <?php foreach ($forcas_config as $key => $config): ?>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" name="forcas[]" value="<?php echo htmlspecialchars($key); ?>" id="forca_<?php echo htmlspecialchars($key); ?>">
+                                    <label for="forca_<?php echo htmlspecialchars($key); ?>"><?php echo htmlspecialchars($config['nome']); ?> (<?php echo htmlspecialchars($key); ?>)</label>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <small>Selecione as forças desejadas. Se nenhuma for selecionada, será uma operação "Geral", disponível para todos.</small>
+                    <?php else: ?>
+                        <p>Nenhuma força de segurança encontrada na configuração.</p>
+                    <?php endif; ?>
+
                 </div>
             </div>
-            <div class="form-actions" style="justify-content: flex-end;">
+            <div class="form-actions" style="justify-content: flex-end; margin-top: 20px;">
                  <button type="submit" name="cadastrar_operacao">Salvar Tipo</button>
             </div>
         </form>
@@ -122,7 +206,7 @@ if ($result_operacoes && $result_operacoes->num_rows > 0) {
             <thead>
                 <tr>
                     <th style="text-align: left;">Nome</th>
-                    <th style="width: 300px;">Forças de Segurança Associadas</th>
+                    <th style-="width: 40%;">Forças de Segurança Associadas</th>
                     <th style="width: 150px;">Ação</th>
                 </tr>
             </thead>
@@ -157,22 +241,6 @@ if ($result_operacoes && $result_operacoes->num_rows > 0) {
         </table>
     </div>
 </div>
-
-<style>
-.badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: 700;
-    color: #fff;
-    white-space: nowrap;
-    vertical-align: middle;
-}
-.badge i {
-    margin-right: 4px;
-}
-</style>
 
 <?php
 require_once 'includes/footer.php';
