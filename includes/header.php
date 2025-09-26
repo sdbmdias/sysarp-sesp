@@ -117,7 +117,6 @@ if (!empty($user_forca_seguranca)) {
                     <li><a href="cadastro_controles.php">Cadastro de Controles</a></li>
                     <?php if ($isSuperAdmin): ?>
                     <li><a href="cadastro_modelos.php">Cadastro de Modelos</a></li>
-                    <li><a href="cadastro_crbm_obm.php">Cadastro de CRBM/OBM</a></li>
                     <li><a href="cadastro_operacoes.php">Cadastro de Operações</a></li> 
                     <?php endif; ?>
                     <li><a href="gerenciar_documentos.php">Gerenciar Documentos</a></li>

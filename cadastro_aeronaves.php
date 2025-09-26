@@ -232,6 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         prefixoSelect.innerHTML = '<option value="">Selecione a Força Primeiro</option>';
         prefixoSelect.disabled = true;
 
+        // ESTA CONDIÇÃO AGORA FUNCIONARÁ APÓS A CORREÇÃO DO JSON
         if (forca && configForcas[forca] && configForcas[forca].prefixo_aeronave) {
             const prefixoBase = configForcas[forca].prefixo_aeronave;
             const prefixOptions = [];
@@ -347,11 +348,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- INICIALIZAÇÃO ---
-
-    if (forcaSegurancaSelect && forcaSegurancaSelect.value) {
-        forcaSegurancaSelect.dispatchEvent(new Event('change'));
-    }
-
+    // Esta chamada inicial garante que o formulário seja populado corretamente
+    // para administradores com força pré-selecionada.
+    handleForcaSegurancaChange();
+    
     atualizarModelos();
     checkFormValidity();
 });

@@ -8,8 +8,8 @@ $mensagem_status = "";
 $aeronaves_disponiveis = [];
 $tipos_operacao = [];
 
+// Bloco para buscar aeronaves (sem alterações)
 if ($isPiloto) {
-    // Se for piloto, busca o CRBM para filtrar as aeronaves
     $stmt_crbm = $conn->prepare("SELECT crbm_piloto FROM pilotos WHERE id = ?");
     $stmt_crbm->bind_param("i", $_SESSION['user_id']);
     $stmt_crbm->execute();
@@ -22,7 +22,7 @@ if ($isPiloto) {
     $stmt_aeronaves->bind_param("s", $crbm_do_piloto);
     $stmt_aeronaves->execute();
     $result_aeronaves = $stmt_aeronaves->get_result();
-} else { // Admin vê todas as aeronaves ativas
+} else { 
     $sql_aeronaves = "SELECT id, prefixo, modelo, crbm FROM aeronaves WHERE status = 'ativo' ORDER BY prefixo ASC";
     $result_aeronaves = $conn->query($sql_aeronaves);
 }
@@ -30,12 +30,37 @@ if ($result_aeronaves) {
     while($row = $result_aeronaves->fetch_assoc()) { $aeronaves_disponiveis[] = $row; }
 }
 
-$result_operacoes = $conn->query("SELECT id, nome FROM tipos_operacao ORDER BY nome ASC");
-if($result_operacoes) {
-    while($row = $result_operacoes->fetch_assoc()) { $tipos_operacao[] = $row; }
+// *** INÍCIO DA ALTERAÇÃO: Filtragem dos Tipos de Operação por Força de Segurança ***
+if ($isSuperAdmin) {
+    // Super Admin vê todas as operações, com a força indicada para clareza
+    $sql_operacoes = "SELECT id, nome, forca_seguranca FROM tipos_operacao ORDER BY forca_seguranca, nome ASC";
+    $result_operacoes = $conn->query($sql_operacoes);
+} else {
+    // Outros usuários veem apenas operações da sua força ou as gerais
+    $sql_operacoes = "SELECT id, nome FROM tipos_operacao WHERE forca_seguranca = ? OR forca_seguranca IS NULL ORDER BY nome ASC";
+    $stmt_operacoes = $conn->prepare($sql_operacoes);
+    $stmt_operacoes->bind_param("s", $user_forca_seguranca); // $user_forca_seguranca vem do header.php
+    $stmt_operacoes->execute();
+    $result_operacoes = $stmt_operacoes->get_result();
 }
 
-// --- Lógica de submissão do formulário ---
+if($result_operacoes) {
+    while($row = $result_operacoes->fetch_assoc()) { 
+        // Adiciona um nome de exibição para SuperAdmins para dar contexto
+        if ($isSuperAdmin && !empty($row['forca_seguranca'])) {
+            $row['nome_exibicao'] = $row['nome'] . ' (' . $row['forca_seguranca'] . ')';
+        } else {
+            $row['nome_exibicao'] = $row['nome'];
+        }
+        $tipos_operacao[] = $row;
+    }
+}
+if (isset($stmt_operacoes)) {
+    $stmt_operacoes->close();
+}
+// *** FIM DA ALTERAÇÃO ***
+
+// --- Lógica de submissão do formulário (sem alterações) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Validações essenciais
@@ -60,10 +85,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 throw new Exception("Não foi possível processar os ficheiros GPX. Verifique o formato.");
             }
             
-            // Coleta e sanitização dos dados do formulário
             $aeronave_id = intval($_POST['aeronave_id']);
             $pilotos_selecionados = array_unique(array_filter($_POST['pilotos']));
-            // CORREÇÃO: Usando 'data' como o nome do campo
             $data = htmlspecialchars($_POST['data']);
             $descricao_operacao = htmlspecialchars($_POST['descricao_operacao']);
             $protocolo_sarpas = htmlspecialchars($_POST['protocolo_sarpas']);
@@ -76,8 +99,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $forma_acionamento = htmlspecialchars($_POST['forma_acionamento']);
             $forma_acionamento_outro = ($forma_acionamento == 'Outro') ? htmlspecialchars($_POST['forma_acionamento_outro']) : NULL;
 
-            // Inserção na tabela de missões
-            // CORREÇÃO: Usando a coluna 'data'
             $stmt_missao = $conn->prepare(
                 "INSERT INTO missoes (aeronave_id, data, descricao_operacao, protocolo_sarpas, rgo_ocorrencia, dados_vitima, link_fotos_videos, descricao_ocorrido, contato_ats, contato_ats_outro, forma_acionamento, forma_acionamento_outro, altitude_maxima, total_distancia_percorrida, total_tempo_voo, data_primeira_decolagem, data_ultimo_pouso) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -93,7 +114,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $missao_id = $conn->insert_id;
             $stmt_missao->close();
 
-            // Associações de pilotos
             $stmt_pilotos_assoc = $conn->prepare("INSERT INTO missoes_pilotos (missao_id, piloto_id) VALUES (?, ?)");
             foreach ($pilotos_selecionados as $piloto_id) {
                 $pid = intval($piloto_id);
@@ -102,16 +122,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $stmt_pilotos_assoc->close();
             
-            // Salvar logs GPX e coordenadas
             $stmt_gpx = $conn->prepare("INSERT INTO missoes_gpx_files (missao_id, file_name, tempo_voo, distancia_percorrida, altura_maxima, data_decolagem, data_pouso) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt_coords = $conn->prepare("INSERT INTO missao_coordenadas (gpx_file_id, latitude, longitude, altitude, timestamp_ponto) VALUES (?, ?, ?, ?, ?)");
 
             $individualFileData = $gpxProcessor->getIndividualFileData();
             foreach ($individualFileData as $key => $file_log_data) {
-                
                 $decolagem_str = $file_log_data['data_decolagem']->format('Y-m-d H:i:s');
                 $pouso_str = $file_log_data['data_pouso']->format('Y-m-d H:i:s');
-                
                 $stmt_gpx->bind_param("isiddss", $missao_id, $uploaded_files_data[$key]['name'], $file_log_data['tempo_voo'], $file_log_data['distancia_percorrida'], $file_log_data['altura_maxima'], $decolagem_str, $pouso_str);
                 $stmt_gpx->execute();
                 $gpx_file_id = $conn->insert_id;
@@ -125,7 +142,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_gpx->close();
             $stmt_coords->close();
             
-            // Atualizar logbook da aeronave
             $stmt_logbook = $conn->prepare("INSERT INTO aeronaves_logbook (aeronave_id, distancia_total_acumulada, tempo_voo_total_acumulado) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE distancia_total_acumulada = distancia_total_acumulada + VALUES(distancia_total_acumulada), tempo_voo_total_acumulado = tempo_voo_total_acumulado + VALUES(tempo_voo_total_acumulado)");
             $stmt_logbook->bind_param("idi", $aeronave_id, $logData['total_distancia_percorrida'], $logData['total_tempo_voo']);
             $stmt_logbook->execute();
@@ -163,9 +179,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <label for="descricao_operacao">Descrição da Operação:</label>
                         <select id="descricao_operacao" name="descricao_operacao" required>
                             <option value="">Selecione o Tipo</option>
+                            <?php // *** INÍCIO DA ALTERAÇÃO: Loop de exibição das operações filtradas *** ?>
                             <?php foreach($tipos_operacao as $tipo): ?>
-                                <option value="<?php echo htmlspecialchars($tipo['nome']); ?>"><?php echo htmlspecialchars($tipo['nome']); ?></option>
+                                <option value="<?php echo htmlspecialchars($tipo['nome']); ?>"><?php echo htmlspecialchars($tipo['nome_exibicao']); ?></option>
                             <?php endforeach; ?>
+                            <?php // *** FIM DA ALTERAÇÃO *** ?>
                         </select>
                     </div>
                     <div class="form-group">
@@ -271,6 +289,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script>
+// Bloco de JavaScript (sem alterações)
 function toggleOtherInput(selectElement, wrapperId) {
     const wrapper = document.getElementById(wrapperId);
     const otherInput = wrapper.querySelector('input');

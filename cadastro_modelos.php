@@ -2,8 +2,8 @@
 // 1. INCLUI O CABEÇALHO PADRÃO
 require_once 'includes/header.php';
 
-// 2. VERIFICAÇÃO DE PERMISSÃO
-if (!$isAdmin) {
+// 2. VERIFICAÇÃO DE PERMISSÃO (CORRIGIDO)
+if (!$isSuperAdmin) {
     header("Location: dashboard.php");
     exit();
 }
@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cadastrar_modelo'])) {
 }
 
 // Processa a exclusão
-if ($isAdmin && isset($_GET['delete_id'])) {
+if ($isSuperAdmin && isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
     $stmt_delete = $conn->prepare("DELETE FROM fabricantes_modelos WHERE id = ?");
     $stmt_delete->bind_param("i", $delete_id);

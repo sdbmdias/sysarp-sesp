@@ -40,19 +40,19 @@ if ($result_modelos) {
 
 // Lógica de atualização do formulário
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $aeronave_id) {
-    $forca_seguranca = $_POST['forca_seguranca'];
-    $fabricante = $_POST['fabricante'];
-    $modelo_id = $_POST['modelo'];
-    $prefixo = $_POST['prefixo'];
-    $numero_serie = $_POST['numero_serie'];
-    $cadastro_sisant = $_POST['cadastro_sisant'];
-    $validade_sisant = $_POST['validade_sisant'];
-    $crbm = $_POST['crbm'];
-    $obm = $_POST['obm'];
-    $data_aquisicao = $_POST['data_aquisicao'];
-    $status = $_POST['status'];
-    $homologacao_anatel = $_POST['homologacao_anatel'];
-    $info_adicionais = $_POST['info_adicionais'];
+    $forca_seguranca = htmlspecialchars($_POST['forca_seguranca']);
+    $fabricante = htmlspecialchars($_POST['fabricante']);
+    $modelo_id = htmlspecialchars($_POST['modelo']);
+    $prefixo = htmlspecialchars($_POST['prefixo']);
+    $numero_serie = htmlspecialchars($_POST['numero_serie']);
+    $cadastro_sisant = htmlspecialchars($_POST['cadastro_sisant']);
+    $validade_sisant = htmlspecialchars($_POST['validade_sisant']);
+    $crbm = htmlspecialchars($_POST['crbm']);
+    $obm = htmlspecialchars($_POST['obm']);
+    $data_aquisicao = htmlspecialchars($_POST['data_aquisicao']);
+    $status = htmlspecialchars($_POST['status']);
+    $homologacao_anatel = htmlspecialchars($_POST['homologacao_anatel']);
+    $info_adicionais = htmlspecialchars($_POST['info_adicionais']);
     
     // Busca o modelo a partir do ID para obter nome e tipo
     $stmt_modelo_info = $conn->prepare("SELECT fabricante, modelo, tipo_drone, pmd_kg FROM fabricantes_modelos WHERE id = ?");
@@ -346,15 +346,20 @@ document.addEventListener('DOMContentLoaded', function() {
             optionAtual.selected = true;
             prefixoSelect.appendChild(optionAtual);
 
-            for (let i = 1; i <= 50; i++) {
-                const nomePrefixo = `HAWK ${i.toString().padStart(2, '0')}`;
-                if (nomePrefixo === valorSalvo.prefixo) continue;
+            // Adicionado para usar a chave corrigida "prefixo_aeronave"
+            const forca = forcaSegurancaSelect.value;
+            if (forca && configForcas[forca] && configForcas[forca].prefixo_aeronave) {
+                const prefixoBase = configForcas[forca].prefixo_aeronave;
+                for (let i = 1; i <= 50; i++) {
+                    const nomePrefixo = `${prefixoBase} ${i.toString().padStart(2, '0')}`;
+                    if (nomePrefixo === valorSalvo.prefixo) continue;
 
-                if (!prefixosUsados.includes(nomePrefixo)) {
-                    const option = document.createElement('option');
-                    option.value = nomePrefixo;
-                    option.textContent = nomePrefixo;
-                    prefixoSelect.appendChild(option);
+                    if (!prefixosUsados.includes(nomePrefixo)) {
+                        const option = document.createElement('option');
+                        option.value = nomePrefixo;
+                        option.textContent = nomePrefixo;
+                        prefixoSelect.appendChild(option);
+                    }
                 }
             }
         }
@@ -373,7 +378,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         crbmSelect.addEventListener('change', updateObmsFromCrbm);
         
-        // Chamadas iniciais
+        // --- INICIALIZAÇÃO ---
+        // CORREÇÃO APLICADA: Estas funções são chamadas diretamente
+        // para popular o formulário com os dados existentes ao carregar a página.
         gerarPrefixos();
         updateLabelsAndOptions();
         updateModelos();

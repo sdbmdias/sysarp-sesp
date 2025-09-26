@@ -7,6 +7,7 @@
     "obm_label": "OBM/Seção",
     "cparp_label": "CPARP",
     "codigo_prefixo": "BM",
+    "prefixo_aeronave": "HARPIA",
     "postos_graduacoes": [
       "Cel. QOBM", "Ten. Cel. QOBM", "Maj. QOBM", "Cap. QOBM", "1º Ten. QOBM", "2º Ten. QOBM", "Asp. Oficial",
       "Sub. Ten. QPBM", "1º Sgt. QPBM", "2º Sgt. QPBM", "3º Sgt. QPBM", "Cb. QPBM", "Sd. QPBM"
@@ -29,6 +30,7 @@
     "obm_label": "OPM/Seção",
     "cparp_label": "CPARP",
     "codigo_prefixo": "PM",
+    "prefixo_aeronave": "ARP PM",
     "postos_graduacoes": [
       "Cel. QOPM", "Ten. Cel QOPM", "Cap. QOPM", "2º Ten. QOPM", "1º Ten. QOPM",
       "Aspirante a Oficial", "Sub. Ten. QPM 1-0", "1º Sgt. QPM 1-0",
@@ -59,6 +61,7 @@
     "obm_label": "Unidade Penal",
     "cparp_label": "COARP",
     "codigo_prefixo": "PP",
+    "prefixo_aeronave": "ARP PP",
     "postos_graduacoes": [
       "Policial Penal"
     ],
@@ -84,6 +87,7 @@
     "obm_label": "Delegacia",
     "cparp_label": "Curso de Capacitação",
     "codigo_prefixo": "PC",
+    "prefixo_aeronave": "ARP PC",
     "postos_graduacoes": [
       "Delegado de Polícia", "Investigador de Polícia", "Escrivão de Polícia", "Papiloscopista"
     ],
@@ -120,6 +124,7 @@
     "obm_label": "Unidade",
     "cparp_label": "Curso de Capacitação",
     "codigo_prefixo": "PCIEN",
+    "prefixo_aeronave": "ARP PCIEN",
     "postos_graduacoes": [
       "Perito Oficial", "Auxiliar de Perícia"
     ],
