@@ -4,5 +4,5 @@
        server: ${{ secrets.FTP_SERVER }}  # <-- ESTE É O PARÂMETRO QUE ESTÁ FALTANDO!
        username: ${{ secrets.FTP_USERNAME }}
        password: ${{ secrets.FTP_PASSWORD }}
-       local-dir: ./caminho/para/seus/arquivos/ # Caminho local dos arquivos a serem enviados
+       local-dir: C:\xampp\htdocs\drones # Caminho local dos arquivos a serem enviados
        server-dir: /caminho/no/servidor/      # Caminho no servidor FTP
