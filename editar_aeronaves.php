@@ -1,7 +1,6 @@
 <?php
 // 1. INCLUI O CABEÇALHO PADRÃO
 require_once 'includes/header.php';
-require_once 'includes/config_forcas.php';
 
 // 2. VERIFICAÇÃO DE PERMISSÃO
 if (!$isSuperAdmin && !$isAdmin) {

@@ -1,9 +1,80 @@
 <?php
 // Inicia a sessão em todas as páginas
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 // 1. INCLUI A CONEXÃO COM O BANCO DE DADOS
 require_once 'database.php';
+
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO CRÍTICA: Lógica de Carregamento Híbrido ***
+// ====================================================================================================
+
+/**
+ * Carrega a configuração base do arquivo JSON e sobrepõe as unidades com os dados do banco.
+ * @param mysqli $conn A conexão com o banco de dados.
+ * @return array A configuração completa e mesclada.
+ */
+function carregar_config_hibrida($conn) {
+    // 1. Carrega a configuração base (rótulos, postos, etc.) do arquivo JSON
+    $config_base = [];
+    $json_file = __DIR__ . '/config_forcas.json';
+    if (file_exists($json_file)) {
+        $config_base = json_decode(file_get_contents($json_file), true);
+    }
+    if (empty($config_base)) {
+        return []; // Retorna vazio se o JSON não puder ser lido
+    }
+
+    // 2. Busca todas as unidades do banco de dados
+    $unidades_db_result = $conn->query("
+        SELECT forca_sigla, id, unidade_pai_id, nome_unidade 
+        FROM unidades 
+        ORDER BY forca_sigla, unidade_pai_id, nome_unidade
+    ");
+    $unidades_db = $unidades_db_result ? $unidades_db_result->fetch_all(MYSQLI_ASSOC) : [];
+
+    // 3. Limpa as unidades estáticas do JSON e reconstrói com os dados do banco
+    foreach ($config_base as $sigla => &$forca_config) {
+        $forca_config['unidades'] = []; // Limpa as unidades do JSON
+
+        $unidades_da_forca = array_filter($unidades_db, function($u) use ($sigla) {
+            return $u['forca_sigla'] === $sigla;
+        });
+
+        $unidades_pai = [];
+        $unidades_filho = [];
+        foreach($unidades_da_forca as $unidade) {
+            if (is_null($unidade['unidade_pai_id'])) {
+                $unidades_pai[$unidade['id']] = $unidade['nome_unidade'];
+            } else {
+                $unidades_filho[$unidade['unidade_pai_id']][] = $unidade['nome_unidade'];
+            }
+        }
+
+        // Reconstrói a estrutura de unidades, incluindo o caso especial da PMPR
+        if ($sigla == 'PMPR') {
+            $forca_config['unidades']['crpms'] = array_values($unidades_pai);
+            foreach ($unidades_pai as $id_pai => $nome_pai) {
+                 $forca_config['unidades']['opms_por_crpm'][$nome_pai] = $unidades_filho[$id_pai] ?? [];
+            }
+        } else {
+            foreach ($unidades_pai as $id_pai => $nome_pai) {
+                $forca_config['unidades'][$nome_pai] = $unidades_filho[$id_pai] ?? [];
+            }
+        }
+    }
+
+    return $config_base;
+}
+
+// CHAMA A FUNÇÃO E CRIA A VARIÁVEL GLOBAL DE CONFIGURAÇÃO
+$config_forcas = carregar_config_hibrida($conn);
+// ====================================================================================================
+// *** FIM DA SEÇÃO CRÍTICA ***
+// ====================================================================================================
+
 
 // 2. BLOCO DE SEGURANÇA E AUTENTICAÇÃO
 if (isset($_SESSION['force_password_reset']) && basename($_SERVER['PHP_SELF']) != 'primeiro_acesso.php') {
@@ -58,10 +129,7 @@ if ($isSuperAdmin || $isAdmin) {
     }
 }
 
-
-// ====================================================================================================
-// *** INÍCIO DA SEÇÃO CORRIGIDA: Lógica de seleção de tema aprimorada ***
-// ====================================================================================================
+// Adiciona classes ao body para theming dinâmico (lógica mantida)
 $body_class = '';
 if (!empty($user_forca_seguranca)) {
     switch ($user_forca_seguranca) {
@@ -82,16 +150,12 @@ if (!empty($user_forca_seguranca)) {
             break;
         case 'CBMPR':
         default:
-            $body_class = 'theme-cbmpr'; // Define CBMPR como tema padrão
+            $body_class = 'theme-cbmpr';
             break;
     }
 } else {
-    // Garante que o tema padrão seja aplicado se o usuário não tiver força definida
     $body_class = 'theme-cbmpr';
 }
-// ====================================================================================================
-// *** FIM DA SEÇÃO CORRIGIDA ***
-// ====================================================================================================
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -132,6 +196,7 @@ if (!empty($user_forca_seguranca)) {
                     <?php if ($isSuperAdmin): ?>
                     <li><a href="cadastro_modelos.php">Cadastro de Modelos</a></li>
                     <li><a href="cadastro_operacoes.php">Cadastro de Operações</a></li> 
+                    <li><a href="gerenciar_unidades.php">Gerenciar Unidades</a></li>
                     <?php endif; ?>
                     <li><a href="gerenciar_documentos.php">Gerenciar Documentos</a></li>
                     <li><a href="alertas.php" class="<?php if ($existem_alertas) echo 'menu-alert'; ?>">Alertas</a></li>

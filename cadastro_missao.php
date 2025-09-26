@@ -1,7 +1,6 @@
 <?php
 require_once 'includes/header.php';
-require_once 'gpx_parser.php'; 
-require_once 'includes/config_forcas.php';
+require_once 'gpx_parser.php';
 
 $mensagem_status = "";
 
