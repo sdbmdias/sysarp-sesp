@@ -2,6 +2,10 @@
 // 1. INCLUI O CABEÇALHO PADRÃO
 require_once 'includes/header.php';
 
+// Adicionado para carregar as configurações das forças
+$forcas_config = json_decode(file_get_contents(__DIR__ . '/includes/config_forcas.json'), true);
+
+
 // 2. LÓGICA ESPECÍFICA DA PÁGINA
 $controles_agrupados_fs = [];
 $controles_agrupados_crbm_obm = [];
@@ -11,11 +15,9 @@ $params = [];
 $types = '';
 
 $mensagem_status = "";
-// Lógica de exclusão (APENAS PARA ADMINS)
 if (($isSuperAdmin || $isAdmin) && isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
 
-    // Busca a forca_seguranca do controle a ser excluído para verificação de permissão
     $stmt_ctrl_fs = $conn->prepare("SELECT forca_seguranca FROM controles WHERE id = ?");
     $stmt_ctrl_fs->bind_param("i", $delete_id);
     $stmt_ctrl_fs->execute();
@@ -85,7 +87,7 @@ if ($isPiloto) {
 }
 
 
-if ($result_controles && $result_controles->num_rows > 0) {
+if (isset($result_controles) && $result_controles->num_rows > 0) {
     while ($row = $result_controles->fetch_assoc()) {
         if ($isSuperAdmin) {
             $controles_agrupados_fs[$row['forca_seguranca']][] = $row;
@@ -100,20 +102,11 @@ if ($result_controles && $result_controles->num_rows > 0) {
 ?>
 
 <style>
-/* Adiciona uma dica visual para rolagem em telas pequenas */
 @media (max-width: 768px) {
-    .table-container::after {
-        content: '◄ Arraste para ver mais ►';
-        display: block;
-        text-align: center;
-        font-size: 0.8em;
-        color: #999;
-        margin-top: 10px;
-    }
+    .table-container::after { content: '◄ Arraste para ver mais ►'; display: block; text-align: center; font-size: 0.8em; color: #999; margin-top: 10px; }
 }
 .data-table th a { color: inherit; text-decoration: none; }
 .data-table th a:hover { text-decoration: underline; }
-/* Estilos para o status */
 .status-ativo { color: #28a745; font-weight: bold; }
 .status-em_manutencao { color: #ffc107; font-weight: bold; }
 .status-baixado { color: #dc3545; font-weight: bold; }
@@ -126,7 +119,12 @@ if ($result_controles && $result_controles->num_rows > 0) {
 
     <?php if ($isSuperAdmin): ?>
         <?php if (!empty($controles_agrupados_fs)): ?>
-            <?php foreach ($controles_agrupados_fs as $forca_seguranca => $controles): ?>
+            <?php foreach ($controles_agrupados_fs as $forca_seguranca => $controles): 
+                // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos ***
+                $config_atual = $forcas_config[$forca_seguranca] ?? null;
+                $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
+                $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
+            ?>
                 <div class="table-container" style="margin-top: 30px;">
                     <h2><?php echo htmlspecialchars($forca_seguranca); ?></h2>
                     <table class="data-table">
@@ -136,7 +134,7 @@ if ($result_controles && $result_controles->num_rows > 0) {
                                 <th>Fabricante/Modelo</th>
                                 <th>Nº Série</th>
                                 <th>Vinculado ao</th>
-                                <th>Lotação (CRBM/OBM)</th>
+                                <th>Lotação (<?php echo htmlspecialchars($crbm_label . '/' . $obm_label); ?>)</th>
                                 <th>Status</th>
                                 <th>ANATEL</th>
                                 <th>Ações</th>
@@ -151,7 +149,8 @@ if ($result_controles && $result_controles->num_rows > 0) {
                                     <td><?php echo htmlspecialchars($controle['prefixo_aeronave'] ?? 'Nenhum (Reserva)'); ?></td>
                                     <td>
                                         <?php 
-                                            $crbm_formatado = preg_replace('/(\d)(CRBM)/', '$1º $2', $controle['crbm'] ?? 'N/A');
+                                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                            $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $controle['crbm'] ?? 'N/A');
                                             echo htmlspecialchars($crbm_formatado . ' / ' . ($controle['obm'] ?? 'N/A'));
                                         ?>
                                     </td>
@@ -181,18 +180,23 @@ if ($result_controles && $result_controles->num_rows > 0) {
             </div>
         <?php endif; ?>
 
-    <?php elseif ($isAdmin): ?>
+    <?php elseif ($isAdmin): 
+        // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos para Admin ***
+        $config_atual = $forcas_config[$user_forca_seguranca] ?? null;
+        $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
+        $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
+    ?>
         <?php if (!empty($controles_agrupados_crbm_obm)): ?>
             <?php foreach ($controles_agrupados_crbm_obm as $crbm_obm => $controles): ?>
                 <div class="table-container" style="margin-top: 30px;">
-                    <h2><?php echo htmlspecialchars(preg_replace('/(\d)(CRBM)/', '$1º $2', $crbm_obm)); ?></h2>
+                    <h2><?php echo htmlspecialchars(preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $crbm_obm)); ?></h2>
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Fabricante/Modelo</th>
                                 <th>Nº Série</th>
                                 <th>Vinculado ao</th>
-                                <th>Lotação (CRBM/OBM)</th>
+                                <th>Lotação (<?php echo htmlspecialchars($crbm_label . '/' . $obm_label); ?>)</th>
                                 <th>Status</th>
                                 <th>ANATEL</th>
                                 <th>Ações</th>
@@ -206,7 +210,8 @@ if ($result_controles && $result_controles->num_rows > 0) {
                                     <td><?php echo htmlspecialchars($controle['prefixo_aeronave'] ?? 'Nenhum (Reserva)'); ?></td>
                                     <td>
                                         <?php 
-                                            $crbm_formatado = preg_replace('/(\d)(CRBM)/', '$1º $2', $controle['crbm'] ?? 'N/A');
+                                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                            $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $controle['crbm'] ?? 'N/A');
                                             echo htmlspecialchars($crbm_formatado . ' / ' . ($controle['obm'] ?? 'N/A'));
                                         ?>
                                     </td>
@@ -236,7 +241,12 @@ if ($result_controles && $result_controles->num_rows > 0) {
             </div>
         <?php endif; ?>
 
-    <?php elseif ($isPiloto): ?>
+    <?php elseif ($isPiloto): 
+        // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos para Piloto ***
+        $config_atual = $forcas_config[$user_forca_seguranca] ?? null;
+        $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
+        $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
+    ?>
         <div class="table-container">
             <table class="data-table">
                 <thead>
@@ -244,7 +254,7 @@ if ($result_controles && $result_controles->num_rows > 0) {
                         <th>Fabricante/Modelo</th>
                         <th>Nº Série</th>
                         <th>Vinculado ao</th>
-                        <th>Lotação (CRBM/OBM)</th>
+                        <th>Lotação (<?php echo htmlspecialchars($crbm_label . '/' . $obm_label); ?>)</th>
                         <th>Status</th>
                         <th>ANATEL</th>
                     </tr>
@@ -258,7 +268,8 @@ if ($result_controles && $result_controles->num_rows > 0) {
                                 <td><?php echo htmlspecialchars($controle['prefixo_aeronave'] ?? 'Nenhum (Reserva)'); ?></td>
                                 <td>
                                     <?php 
-                                        $crbm_formatado = preg_replace('/(\d)(CRBM)/', '$1º $2', $controle['crbm'] ?? 'N/A');
+                                        // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                        $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $controle['crbm'] ?? 'N/A');
                                         echo htmlspecialchars($crbm_formatado . ' / ' . ($controle['obm'] ?? 'N/A'));
                                     ?>
                                 </td>

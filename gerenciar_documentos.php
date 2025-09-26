@@ -3,7 +3,6 @@
 require_once 'includes/header.php';
 
 // 2. VERIFICAÇÃO DE PERMISSÃO
-// Apenas Super Administrador e Administrador têm acesso a esta página
 if (!$isSuperAdmin && !$isAdmin) {
     header("Location: dashboard.php");
     exit();
@@ -13,54 +12,95 @@ if (!$isSuperAdmin && !$isAdmin) {
 $mensagem_status = "";
 $search_term = isset($_GET['q']) ? trim($_GET['q']) : '';
 
-// Processa a exclusão do documento
-if (($isSuperAdmin || $isAdmin) && isset($_GET['delete_id'])) {
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ALTERADA: Lógica de exclusão com verificação de permissão ***
+// ====================================================================================================
+if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
+    $can_delete = false;
+    
+    if ($isSuperAdmin) {
+        $can_delete = true;
+    } elseif ($isAdmin) {
+        // Admin só pode excluir documentos de aeronaves da sua força.
+        // Primeiro, verificamos se o documento está associado a alguma aeronave.
+        $stmt_check = $conn->prepare(
+            "SELECT a.forca_seguranca 
+             FROM documentos_associados da
+             JOIN aeronaves a ON da.aeronave_id = a.id
+             WHERE da.documento_id = ?"
+        );
+        $stmt_check->bind_param("i", $delete_id);
+        $stmt_check->execute();
+        $result_check = $stmt_check->get_result();
+        
+        if ($result_check->num_rows > 0) {
+            // O documento está associado a aeronaves. Verificamos se alguma é da força do admin.
+            while ($row = $result_check->fetch_assoc()) {
+                if ($row['forca_seguranca'] === $user_forca_seguranca) {
+                    $can_delete = true;
+                    break; // Encontrou uma correspondência, pode excluir.
+                }
+            }
+        }
+        // Se o resultado for 0, é um doc global ou de modelo, que o Admin não pode excluir.
+        $stmt_check->close();
+    }
 
-    $stmt_get = $conn->prepare("SELECT caminho_arquivo FROM documentos WHERE id = ?");
-    $stmt_get->bind_param("i", $delete_id);
-    $stmt_get->execute();
-    $result_get = $stmt_get->get_result();
+    if ($can_delete) {
+        $stmt_get = $conn->prepare("SELECT caminho_arquivo FROM documentos WHERE id = ?");
+        $stmt_get->bind_param("i", $delete_id);
+        $stmt_get->execute();
+        $result_get = $stmt_get->get_result();
 
-    if ($result_get->num_rows > 0) {
-        $documento = $result_get->fetch_assoc();
-        $caminho_arquivo = $documento['caminho_arquivo'];
+        if ($result_get->num_rows > 0) {
+            $documento = $result_get->fetch_assoc();
+            $caminho_arquivo = $documento['caminho_arquivo'];
 
-        $conn->begin_transaction();
-        $stmt_delete = $conn->prepare("DELETE FROM documentos WHERE id = ?");
-        $stmt_delete->bind_param("i", $delete_id);
+            $conn->begin_transaction();
+            $stmt_delete = $conn->prepare("DELETE FROM documentos WHERE id = ?");
+            $stmt_delete->bind_param("i", $delete_id);
 
-        if ($stmt_delete->execute()) {
-            if (file_exists($caminho_arquivo) && !is_dir($caminho_arquivo)) {
-                if (unlink($caminho_arquivo)) {
-                    $conn->commit();
-                    $mensagem_status = "<div class='success-message-box'>Documento e arquivo físico excluídos com sucesso!</div>";
+            if ($stmt_delete->execute()) {
+                if (file_exists($caminho_arquivo) && !is_dir($caminho_arquivo)) {
+                    if (unlink($caminho_arquivo)) {
+                        $conn->commit();
+                        $mensagem_status = "<div class='success-message-box'>Documento e arquivo físico excluídos com sucesso!</div>";
+                    } else {
+                        $conn->rollback();
+                        $mensagem_status = "<div class='error-message-box'>Erro: O registro foi removido, mas falha ao excluir o arquivo físico.</div>";
+                    }
                 } else {
-                    $conn->rollback();
-                    $mensagem_status = "<div class='error-message-box'>Erro: O registro do documento foi removido, mas falha ao excluir o arquivo físico. Verifique as permissões da pasta 'uploads'.</div>";
+                    $conn->commit();
+                    $mensagem_status = "<div class='success-message-box'>Registro do documento excluído com sucesso. Arquivo físico não encontrado.</div>";
                 }
             } else {
-                $conn->commit();
-                $mensagem_status = "<div class='success-message-box'>Registro do documento excluído com sucesso. O arquivo físico não foi encontrado no servidor.</div>";
+                $conn->rollback();
+                $mensagem_status = "<div class='error-message-box'>Erro ao excluir o registro do banco de dados.</div>";
             }
+            $stmt_delete->close();
         } else {
-            $conn->rollback();
-            $mensagem_status = "<div class='error-message-box'>Erro ao excluir o registro do documento do banco de dados.</div>";
+            $mensagem_status = "<div class='error-message-box'>Documento não encontrado para exclusão.</div>";
         }
-        $stmt_delete->close();
+        $stmt_get->close();
     } else {
-        $mensagem_status = "<div class='error-message-box'>Documento não encontrado para exclusão.</div>";
+        // Se $can_delete for falso, o usuário não tem permissão.
+        $mensagem_status = "<div class='error-message-box'>Você não tem permissão para excluir este tipo de documento.</div>";
     }
-    $stmt_get->close();
 }
+// ====================================================================================================
+// *** FIM DA SEÇÃO ALTERADA ***
+// ====================================================================================================
 
 
-// Busca todos os documentos para listagem, incluindo o prefixo da aeronave
+// Busca todos os documentos, incluindo informações para verificação de permissão
 $todos_documentos = [];
+// *** ALTERAÇÃO APLICADA AQUI: Adicionado GROUP_CONCAT para forca_seguranca ***
 $sql_docs = "SELECT 
                 d.id, d.nome_exibicao, d.caminho_arquivo, d.tipo_arquivo, d.data_upload, d.nome_arquivo_servidor,
                 GROUP_CONCAT(DISTINCT ac.prefixo SEPARATOR ', ') AS aeronaves_associadas,
-                GROUP_CONCAT(DISTINCT da.modelo_aeronave SEPARATOR '||') AS modelos_associados
+                GROUP_CONCAT(DISTINCT da.modelo_aeronave SEPARATOR '||') AS modelos_associados,
+                GROUP_CONCAT(DISTINCT ac.forca_seguranca SEPARATOR '||') AS forcas_associadas
              FROM documentos d
              LEFT JOIN documentos_associados da ON d.id = da.documento_id
              LEFT JOIN aeronaves ac ON da.aeronave_id = ac.id
@@ -69,9 +109,7 @@ $sql_docs = "SELECT
 if (!empty($search_term)) {
     $sql_docs .= " WHERE d.nome_exibicao LIKE ?";
 }
-
 $sql_docs .= " GROUP BY d.id ORDER BY d.nome_exibicao ASC";
-
 $stmt_docs = $conn->prepare($sql_docs);
 
 if (!empty($search_term)) {
@@ -81,7 +119,6 @@ if (!empty($search_term)) {
 
 $stmt_docs->execute();
 $result_docs = $stmt_docs->get_result();
-
 if ($result_docs) {
     while($row = $result_docs->fetch_assoc()) {
         $todos_documentos[] = $row;
@@ -89,19 +126,15 @@ if ($result_docs) {
 }
 $stmt_docs->close();
 
-// Conta o número total de modelos de aeronave distintos
 $total_modelos_aeronave = 0;
 $result_total_modelos = $conn->query("SELECT COUNT(DISTINCT modelo) as total FROM fabricantes_modelos WHERE tipo = 'Aeronave'");
 if ($result_total_modelos) {
     $total_modelos_aeronave = $result_total_modelos->fetch_assoc()['total'];
 }
 
-
-// Separa os documentos em categorias
 $docs_globais = [];
 $docs_de_modelo = [];
 $docs_especificos = [];
-
 foreach ($todos_documentos as $doc) {
     $num_modelos_associados = $doc['modelos_associados'] ? count(explode('||', $doc['modelos_associados'])) : 0;
     
@@ -156,7 +189,9 @@ foreach ($todos_documentos as $doc) {
                             <td><?php echo htmlspecialchars($doc['nome_exibicao']); ?></td>
                             <td class="action-buttons">
                                 <a href="<?php echo htmlspecialchars($doc['caminho_arquivo']); ?>" class="action-btn" style="background-color: #007bff;" download><i class="fas fa-download"></i> Baixar</a>
+                                <?php if ($isSuperAdmin): // *** ALTERAÇÃO APLICADA AQUI: Apenas Super Admin pode excluir *** ?>
                                 <a href="gerenciar_documentos.php?delete_id=<?php echo $doc['id']; ?>" class="action-btn" style="background-color:#dc3545;" onclick="return confirm('ATENÇÃO: Ação irreversível! Deseja excluir permanentemente este documento e todas as suas associações?');"><i class="fas fa-trash-alt"></i> Excluir</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -185,7 +220,9 @@ foreach ($todos_documentos as $doc) {
                             <td><?php echo htmlspecialchars(str_replace('||', ', ', $doc['modelos_associados'])); ?></td>
                             <td class="action-buttons">
                                 <a href="<?php echo htmlspecialchars($doc['caminho_arquivo']); ?>" class="action-btn" style="background-color: #007bff;" download><i class="fas fa-download"></i> Baixar</a>
+                                <?php if ($isSuperAdmin): // *** ALTERAÇÃO APLICADA AQUI: Apenas Super Admin pode excluir *** ?>
                                 <a href="gerenciar_documentos.php?delete_id=<?php echo $doc['id']; ?>" class="action-btn" style="background-color:#dc3545;" onclick="return confirm('ATENÇÃO: Ação irreversível! Deseja excluir permanentemente este documento e todas as suas associações?');"><i class="fas fa-trash-alt"></i> Excluir</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -214,7 +251,21 @@ foreach ($todos_documentos as $doc) {
                             <td><?php echo htmlspecialchars($doc['aeronaves_associadas']); ?></td>
                             <td class="action-buttons">
                                 <a href="<?php echo htmlspecialchars($doc['caminho_arquivo']); ?>" class="action-btn" style="background-color: #007bff;" download><i class="fas fa-download"></i> Baixar</a>
+                                <?php 
+                                // *** ALTERAÇÃO APLICADA AQUI: Lógica para exibir botão de exclusão ***
+                                $can_delete = false;
+                                if ($isSuperAdmin) {
+                                    $can_delete = true;
+                                } elseif ($isAdmin && !empty($doc['forcas_associadas'])) {
+                                    $forcas = explode('||', $doc['forcas_associadas']);
+                                    if (in_array($user_forca_seguranca, $forcas)) {
+                                        $can_delete = true;
+                                    }
+                                }
+                                if ($can_delete):
+                                ?>
                                 <a href="gerenciar_documentos.php?delete_id=<?php echo $doc['id']; ?>" class="action-btn" style="background-color:#dc3545;" onclick="return confirm('ATENÇÃO: Ação irreversível! Deseja excluir permanentemente este documento e todas as suas associações?');"><i class="fas fa-trash-alt"></i> Excluir</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -227,43 +278,13 @@ foreach ($todos_documentos as $doc) {
 </div>
 
 <style>
-/* Estilo para alinhamento das tabelas */
-.data-table th, .data-table td {
-    padding: 12px 15px;
-    vertical-align: middle;
-    text-align: center;
-}
-
-.data-table th:first-child, .data-table td:first-child {
-    text-align: left; /* Mantém a primeira coluna à esquerda */
-}
-
-.data-table th.actions-column,
-.data-table td.action-buttons {
-    width: 220px;
-}
-
-/* Estilo unificado para botões de ação */
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 10px;
-    margin: 2px;
-    border-radius: 4px;
-    text-decoration: none;
-    color: #fff;
-    font-size: .85em;
-    transition: opacity 0.2s;
-    border: none;
-    cursor: pointer;
-}
-.action-btn:hover {
-    opacity: 0.85;
-}
+.data-table th, .data-table td { padding: 12px 15px; vertical-align: middle; text-align: center; }
+.data-table th:first-child, .data-table td:first-child { text-align: left; }
+.data-table th.actions-column, .data-table td.action-buttons { width: 220px; }
+.action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; margin: 2px; border-radius: 4px; text-decoration: none; color: #fff; font-size: .85em; transition: opacity 0.2s; border: none; cursor: pointer; }
+.action-btn:hover { opacity: 0.85; }
 </style>
 
 <?php
-// INCLUI O RODAPÉ
 require_once 'includes/footer.php';
 ?>

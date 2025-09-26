@@ -2,13 +2,15 @@
 // 1. INCLUI O CABEÇALHO PADRÃO
 require_once 'includes/header.php';
 
+// Adicionado para carregar as configurações das forças
+$forcas_config = json_decode(file_get_contents(__DIR__ . '/includes/config_forcas.json'), true);
+
 $mensagem_status = "";
 
 // 2. LÓGICA DE EXCLUSÃO (APENAS PARA ADMINS)
 if (($isSuperAdmin || $isAdmin) && isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
 
-    // Busca a forca_seguranca da aeronave a ser excluída para verificação de permissão
     $stmt_acft_fs = $conn->prepare("SELECT forca_seguranca FROM aeronaves WHERE id = ?");
     $stmt_acft_fs->bind_param("i", $delete_id);
     $stmt_acft_fs->execute();
@@ -17,7 +19,6 @@ if (($isSuperAdmin || $isAdmin) && isset($_GET['delete_id'])) {
     $stmt_acft_fs->close();
 
     if ($isSuperAdmin || ($isAdmin && $user_forca_seguranca === $acft_a_excluir_fs)) {
-        // Verifica se a aeronave está associada a missões, manutenções ou controles
         $stmt_check_missoes = $conn->prepare("SELECT COUNT(*) AS total FROM missoes WHERE aeronave_id = ?");
         $stmt_check_missoes->bind_param("i", $delete_id);
         $stmt_check_missoes->execute();
@@ -62,47 +63,21 @@ $where_clauses = [];
 $params = [];
 $types = '';
 
-// Lógica de ordenação dinâmica
 $sort_columns = [
-    'prefixo' => 'a.prefixo',
-    'fabricante_modelo' => 'a.fabricante',
-    'numero_serie' => 'a.numero_serie',
-    'sisant' => 'a.cadastro_sisant',
-    'crbm' => 'a.crbm',
-    'obm' => 'a.obm',
-    'forca_seguranca' => 'a.forca_seguranca',
-    'tipo_drone' => 'fm.tipo_drone',
-    'pmd' => 'fm.pmd_kg',
-    'status' => 'a.status',
-    'anatel' => 'a.homologacao_anatel'
+    'prefixo' => 'a.prefixo', 'fabricante_modelo' => 'a.fabricante', 'numero_serie' => 'a.numero_serie',
+    'sisant' => 'a.cadastro_sisant', 'crbm' => 'a.crbm', 'obm' => 'a.obm', 'forca_seguranca' => 'a.forca_seguranca',
+    'tipo_drone' => 'fm.tipo_drone', 'pmd' => 'fm.pmd_kg', 'status' => 'a.status', 'anatel' => 'a.homologacao_anatel'
 ];
-
 $sort_by = $_GET['sort'] ?? 'prefixo';
 $sort_dir = $_GET['dir'] ?? 'ASC';
-
 $order_by = $sort_columns[$sort_by] ?? $sort_columns['prefixo'];
 $order_dir = (strtoupper($sort_dir) === 'DESC') ? 'DESC' : 'ASC';
 
 $sql_aeronaves = "
-    SELECT 
-        a.id, 
-        a.prefixo, 
-        a.fabricante, 
-        a.modelo, 
-        a.numero_serie, 
-        a.cadastro_sisant, 
-        a.validade_sisant, 
-        a.crbm, 
-        a.obm, 
-        a.forca_seguranca, 
-        fm.tipo_drone, 
-        fm.pmd_kg, 
-        a.status, 
-        a.homologacao_anatel 
-    FROM 
-        aeronaves a
-    LEFT JOIN
-        fabricantes_modelos fm ON a.fabricante = fm.fabricante AND a.modelo = fm.modelo
+    SELECT a.id, a.prefixo, a.fabricante, a.modelo, a.numero_serie, a.cadastro_sisant, a.validade_sisant, 
+           a.crbm, a.obm, a.forca_seguranca, fm.tipo_drone, fm.pmd_kg, a.status, a.homologacao_anatel 
+    FROM aeronaves a
+    LEFT JOIN fabricantes_modelos fm ON a.fabricante = fm.fabricante AND a.modelo = fm.modelo
 ";
 
 if ($isPiloto) {
@@ -167,66 +142,42 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
 }
 ?>
 <style>
-/* Adiciona uma dica visual para rolagem em telas pequenas */
-@media (max-width: 768px) {
-    .table-container::after {
-        content: '◄ Arraste para ver mais ►';
-        display: block;
-        text-align: center;
-        font-size: 0.8em;
-        color: #999;
-        margin-top: 10px;
-    }
-}
+@media (max-width: 768px) { .table-container::after { content: '◄ Arraste para ver mais ►'; display: block; text-align: center; font-size: 0.8em; color: #999; margin-top: 10px; } }
 .data-table th a { color: inherit; text-decoration: none; }
 .data-table th a:hover { text-decoration: underline; }
-
-/* Estilo de alinhamento vertical e horizontal, e largura fixa para as colunas */
-.data-table {
-    table-layout: fixed;
-    width: 100%;
-}
-.data-table th, .data-table td {
-    vertical-align: middle;
-    text-align: center;
-}
-/* Definição das larguras das colunas */
-.data-table colgroup col:nth-child(1) { width: 10%; }  /* Prefixo */
-.data-table colgroup col:nth-child(2) { width: 18%; }  /* Fabricante/Modelo */
-.data-table colgroup col:nth-child(3) { width: 12%; }  /* Nº Série */
-.data-table colgroup col:nth-child(4) { width: 18%; }  /* Lotação */
-.data-table colgroup col:nth-child(5) { width: 10%; }  /* Tipo */
-.data-table colgroup col:nth-child(6) { width: 10%; }  /* Status */
-.data-table colgroup col:nth-child(7) { width: 12%; }  /* Ações */
+.data-table { table-layout: fixed; width: 100%; }
+.data-table th, .data-table td { vertical-align: middle; text-align: center; }
+.data-table colgroup col:nth-child(1) { width: 10%; }
+.data-table colgroup col:nth-child(2) { width: 18%; }
+.data-table colgroup col:nth-child(3) { width: 12%; }
+.data-table colgroup col:nth-child(4) { width: 18%; }
+.data-table colgroup col:nth-child(5) { width: 10%; }
+.data-table colgroup col:nth-child(6) { width: 10%; }
+.data-table colgroup col:nth-child(7) { width: 12%; }
 </style>
 <div class="main-content">
     <h1>Lista de Aeronaves</h1>
     
-    <?php if(!empty($mensagem_status)) echo $mensagem_status; // Mensagem já está dentro de um div, não precisa de htmlspecialchars aqui ?>
+    <?php if(!empty($mensagem_status)) echo $mensagem_status; ?>
 
     <?php if ($isSuperAdmin): ?>
         <?php if (!empty($aeronaves_agrupadas_fs)): ?>
-            <?php foreach ($aeronaves_agrupadas_fs as $forca_seguranca => $aeronaves): ?>
+            <?php foreach ($aeronaves_agrupadas_fs as $forca_seguranca => $aeronaves): 
+                // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos ***
+                $config_atual = $forcas_config[$forca_seguranca] ?? null;
+                $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
+                $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
+            ?>
                 <div class="table-container" style="margin-top: 30px;">
                     <h2><?php echo htmlspecialchars($forca_seguranca); ?></h2>
                     <table class="data-table">
-                        <colgroup>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                        </colgroup>
+                        <colgroup><col><col><col><col><col><col><col></colgroup>
                         <thead>
                             <tr>
                                 <th><a href="<?php echo get_sort_link_aeronave('prefixo', $sort_by, $sort_dir); ?>">Prefixo <?php echo ($sort_by === 'prefixo') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?></a></th>
                                 <th><a href="<?php echo get_sort_link_aeronave('fabricante_modelo', $sort_by, $sort_dir); ?>">Fabricante/Modelo <?php echo ($sort_by === 'fabricante_modelo') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?></a></th>
                                 <th><a href="<?php echo get_sort_link_aeronave('numero_serie', $sort_by, $sort_dir); ?>">Nº Série <?php echo ($sort_by === 'numero_serie') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?></a></th>
-                                <th>
-                                    <?php echo ($forca_seguranca === 'PMPR') ? 'Lotação (CRPM/OPM)' : 'Lotação (CRBM/OBM)'; ?>
-                                </th>
+                                <th>Lotação (<?php echo htmlspecialchars($crbm_label . '/' . $obm_label); ?>)</th>
                                 <th><a href="<?php echo get_sort_link_aeronave('tipo_drone', $sort_by, $sort_dir); ?>">Tipo <?php echo ($sort_by === 'tipo_drone') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?></a></th>
                                 <th><a href="<?php echo get_sort_link_aeronave('status', $sort_by, $sort_dir); ?>">Status <?php echo ($sort_by === 'status') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?></a></th>
                                 <th>Ações</th>
@@ -240,7 +191,8 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
                                     <td><?php echo htmlspecialchars($aeronave['numero_serie'] ?? 'N/A'); ?></td>
                                     <td>
                                         <?php 
-                                            $crbm_formatado = ($aeronave['forca_seguranca'] === 'PMPR') ? preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $aeronave['crbm'] ?? 'N/A') : preg_replace('/(\d)(CRBM)/', '$1º $2', $aeronave['crbm'] ?? 'N/A');
+                                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                            $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $aeronave['crbm'] ?? 'N/A');
                                             echo htmlspecialchars($crbm_formatado . ' / ' . ($aeronave['obm'] ?? 'N/A'));
                                         ?>
                                     </td>
@@ -273,21 +225,13 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
                 <div class="table-container" style="margin-top: 30px;">
                     <h2> 
                         <?php 
-                            $forca_seguranca = $aeronaves[0]['forca_seguranca'];
-                            $crbm_obm_formatado = ($forca_seguranca === 'PMPR') ? preg_replace('/^(\d+)\s*CRPM$/i', '$1º CRPM', $crbm_obm) : preg_replace('/(\d)(CRBM)/', '$1º $2', $crbm_obm);
+                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                            $crbm_obm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $crbm_obm);
                             echo htmlspecialchars($crbm_obm_formatado);
                         ?>
                     </h2>
                     <table class="data-table">
-                        <colgroup>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                        </colgroup>
+                        <colgroup><col><col><col><col><col><col><col></colgroup>
                         <thead>
                             <tr>
                                 <th><a href="<?php echo get_sort_link_aeronave('prefixo', $sort_by, $sort_dir); ?>">Prefixo <?php echo ($sort_by === 'prefixo') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?></a></th>
@@ -332,14 +276,7 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
     <?php elseif ($isPiloto): ?>
         <div class="table-container">
             <table class="data-table">
-                <colgroup>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                </colgroup>
+                <colgroup><col><col><col><col><col><col></colgroup>
                 <thead>
                     <tr>
                         <th><a href="<?php echo get_sort_link_aeronave('prefixo', $sort_by, $sort_dir); ?>">Prefixo <?php echo ($sort_by === 'prefixo') ? (($order_dir === 'ASC') ? '▲' : '▼') : ''; ?></a></th>

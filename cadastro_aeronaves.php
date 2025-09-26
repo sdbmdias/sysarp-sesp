@@ -11,32 +11,69 @@ if (!$isSuperAdmin && !$isAdmin) {
 
 // 3. LÓGICA ESPECÍFICA DA PÁGINA
 $mensagem_status = "";
-$aeronaves = [];
 $unidades_config = $config_forcas;
 
-// --- Lógica para buscar aeronaves para o dropdown de vínculo ---
-if ($isSuperAdmin) {
-    $sql_aeronaves = "SELECT id, prefixo, forca_seguranca, crbm, obm FROM aeronaves WHERE status = 'ativo' ORDER BY prefixo ASC";
-    $result_aeronaves = $conn->query($sql_aeronaves);
-    if ($result_aeronaves) {
-        while ($row = $result_aeronaves->fetch_assoc()) {
-            $aeronaves[] = $row;
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $conn->begin_transaction();
+    try {
+        $forca_seguranca = htmlspecialchars($_POST['forca_seguranca']);
+        $fabricante = htmlspecialchars($_POST['fabricante']);
+        $modelo_id = intval($_POST['modelo']);
+        $prefixo = htmlspecialchars($_POST['prefixo']);
+        $numero_serie = htmlspecialchars($_POST['numero_serie']);
+        $crbm = htmlspecialchars($_POST['crbm']);
+        $obm = htmlspecialchars($_POST['obm']);
+        $status = htmlspecialchars($_POST['status']);
+        $homologacao_anatel = htmlspecialchars($_POST['homologacao_anatel']);
+        $info_adicionais = htmlspecialchars($_POST['info_adicionais']);
+        $cadastro_sisant = htmlspecialchars($_POST['cadastro_sisant']);
+        $validade_sisant = !empty($_POST['validade_sisant']) ? htmlspecialchars($_POST['validade_sisant']) : NULL;
+        $data_aquisicao = !empty($_POST['data_aquisicao']) ? htmlspecialchars($_POST['data_aquisicao']) : NULL;
+
+        $stmt_modelo = $conn->prepare("SELECT modelo, tipo_drone, pmd_kg FROM fabricantes_modelos WHERE id = ?");
+        $stmt_modelo->bind_param("i", $modelo_id);
+        $stmt_modelo->execute();
+        $result_modelo = $stmt_modelo->get_result();
+        if ($result_modelo->num_rows === 0) {
+            throw new Exception("Modelo de aeronave selecionado é inválido.");
+        }
+        $modelo_data = $result_modelo->fetch_assoc();
+        $modelo_nome = $modelo_data['modelo'];
+        $tipo_drone = $modelo_data['tipo_drone'];
+        $pmd_kg = $modelo_data['pmd_kg'];
+        $stmt_modelo->close();
+
+        $stmt_insert = $conn->prepare(
+            "INSERT INTO aeronaves (forca_seguranca, prefixo, fabricante, modelo, numero_serie, crbm, obm, status, homologacao_anatel, info_adicionais, cadastro_sisant, validade_sisant, data_aquisicao, tipo_drone, pmd_kg) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt_insert->bind_param("ssssssssssssssd", $forca_seguranca, $prefixo, $fabricante, $modelo_nome, $numero_serie, $crbm, $obm, $status, $homologacao_anatel, $info_adicionais, $cadastro_sisant, $validade_sisant, $data_aquisicao, $tipo_drone, $pmd_kg);
+        
+        if (!$stmt_insert->execute()) {
+             throw new Exception($conn->error);
+        }
+        $nova_aeronave_id = $conn->insert_id;
+        $stmt_insert->close();
+
+        $stmt_logbook = $conn->prepare("INSERT INTO aeronaves_logbook (aeronave_id, distancia_total_acumulada, tempo_voo_total_acumulado) VALUES (?, 0, 0)");
+        $stmt_logbook->bind_param("i", $nova_aeronave_id);
+        $stmt_logbook->execute();
+        $stmt_logbook->close();
+
+        $conn->commit();
+        $mensagem_status = "<div class='success-message-box'>Aeronave cadastrada com sucesso! Redirecionando...</div>";
+        echo "<script>setTimeout(function() { window.location.href = 'listar_aeronaves.php'; }, 2000);</script>";
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        if ($conn->errno == 1062) {
+            $mensagem_status = "<div class='error-message-box'>Erro: O Prefixo ou Número de Série informado já existe no sistema.</div>";
+        } else {
+            $mensagem_status = "<div class='error-message-box'>Erro ao cadastrar a aeronave: " . $e->getMessage() . "</div>";
         }
     }
-} elseif ($isAdmin) {
-    $stmt_aeronaves = $conn->prepare("SELECT id, prefixo, forca_seguranca, crbm, obm FROM aeronaves WHERE forca_seguranca = ? AND status = 'ativo' ORDER BY prefixo ASC");
-    $stmt_aeronaves->bind_param("s", $user_forca_seguranca);
-    $stmt_aeronaves->execute();
-    $result_aeronaves = $stmt_aeronaves->get_result();
-    if ($result_aeronaves) {
-        while ($row = $result_aeronaves->fetch_assoc()) {
-            $aeronaves[] = $row;
-        }
-    }
-    $stmt_aeronaves->close();
 }
 
-// --- Busca fabricantes e modelos de AERONAVES do banco de dados ---
 $fabricantes_e_modelos = [];
 $sql_modelos = "SELECT id, fabricante, modelo, tipo_drone, pmd_kg FROM fabricantes_modelos WHERE tipo = 'Aeronave' ORDER BY fabricante, modelo";
 $result_modelos = $conn->query($sql_modelos);
@@ -46,7 +83,6 @@ if ($result_modelos) {
     }
 }
 
-// --- Busca prefixos já em uso ---
 $usados_prefixos = [];
 $sql_used_prefixes = "SELECT prefixo FROM aeronaves";
 $result_used_prefixes = $conn->query($sql_used_prefixes);
@@ -56,11 +92,12 @@ if ($result_used_prefixes) {
     }
 }
 
+$initial_crbm_label = 'Unidade de Lotação';
+$initial_obm_label = 'Subunidade';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // A lógica de salvamento do formulário vai aqui.
-    // Como o foco é a correção do formulário em si, esta parte é omitida,
-    // mas ela deve usar prepared statements e validação de dados.
+if ($isAdmin && !$isSuperAdmin && isset($unidades_config[$user_forca_seguranca])) {
+    $initial_crbm_label = $unidades_config[$user_forca_seguranca]['crbm_label'];
+    $initial_obm_label = $unidades_config[$user_forca_seguranca]['obm_label'];
 }
 ?>
 
@@ -113,16 +150,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <label for="numero_serie">Número de Série:</label>
                     <input type="text" id="numero_serie" name="numero_serie" placeholder="Nº de Série do Drone" required>
                 </div>
+
+                <?php // ======================================================================================= ?>
+                <?php // *** INÍCIO DA SEÇÃO ADICIONADA: Campos SISANT e Data de Aquisição *** ?>
+                <?php // ======================================================================================= ?>
                 <div class="form-group">
-                    <label for="crbm" id="crbm_label">CRBM:</label>
+                    <label for="cadastro_sisant">Cadastro SISANT:</label>
+                    <input type="text" id="cadastro_sisant" name="cadastro_sisant" placeholder="Ex: PP-123456789" required>
+                </div>
+                <div class="form-group">
+                    <label for="validade_sisant">Validade SISANT:</label>
+                    <input type="date" id="validade_sisant" name="validade_sisant" required>
+                </div>
+                <div class="form-group">
+                    <label for="data_aquisicao">Data de Aquisição:</label>
+                    <input type="date" id="data_aquisicao" name="data_aquisicao" required>
+                </div>
+                <?php // ======================================================================================= ?>
+                <?php // *** FIM DA SEÇÃO ADICIONADA *** ?>
+                <?php // ======================================================================================= ?>
+                
+                <div class="form-group">
+                    <label for="crbm" id="crbm_label"><?php echo htmlspecialchars($initial_crbm_label); ?>:</label>
                     <select id="crbm" name="crbm" required disabled>
                         <option value="">Selecione a Força de Segurança primeiro</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="obm" id="obm_label">OBM/Seção:</label>
+                    <label for="obm" id="obm_label"><?php echo htmlspecialchars($initial_obm_label); ?>:</label>
                     <select id="obm" name="obm" required disabled>
-                        <option value="">Selecione a Força de Segurança primeiro</option>
+                        <option value="">Selecione a Unidade Superior primeiro</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -163,7 +220,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // --- VARIÁVEIS E CONSTANTES ---
     const configForcas = <?php echo json_encode($unidades_config); ?>;
     const modelosPorFabricante = <?php echo json_encode($fabricantes_e_modelos); ?>;
     const usadosPrefixos = <?php echo json_encode($usados_prefixos); ?>;
@@ -181,8 +237,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoDroneInput = document.getElementById('tipo_drone');
     const pmdKgInput = document.getElementById('pmd_kg');
     const requiredFields = Array.from(form.querySelectorAll('[required]'));
-
-    // --- FUNÇÕES ---
 
     function checkFormValidity() {
         const isFormValid = requiredFields.every(field => {
@@ -231,8 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function atualizarPrefixos(forca) {
         prefixoSelect.innerHTML = '<option value="">Selecione a Força Primeiro</option>';
         prefixoSelect.disabled = true;
-
-        // ESTA CONDIÇÃO AGORA FUNCIONARÁ APÓS A CORREÇÃO DO JSON
+        
         if (forca && configForcas[forca] && configForcas[forca].prefixo_aeronave) {
             const prefixoBase = configForcas[forca].prefixo_aeronave;
             const prefixOptions = [];
@@ -257,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const crbm = this.value; 
         const config = configForcas[forca];
         
-        let placeholderText = 'Selecione a OBM/Seção';
+        let placeholderText = 'Selecione a Subunidade';
         if (config && config.obm_label) {
              placeholderText = `Selecione a ${config.obm_label}`;
         }
@@ -288,11 +341,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         atualizarPrefixos(forca);
 
-        crbmLabel.textContent = 'CRBM:';
-        obmLabel.textContent = 'OBM/Seção:';
+        crbmLabel.textContent = 'Unidade de Lotação:';
+        obmLabel.textContent = 'Subunidade:';
         populateSelect(crbmSelect, [], 'Selecione a Força primeiro');
         crbmSelect.disabled = true;
-        populateSelect(obmSelect, [], 'Selecione o CRBM/CRPM primeiro');
+        populateSelect(obmSelect, [], 'Selecione a Unidade de Lotação primeiro');
         obmSelect.disabled = true;
         
         crbmSelect.removeEventListener('change', handleDynamicUnitsChange);
@@ -303,11 +356,11 @@ document.addEventListener('DOMContentLoaded', function() {
             obmLabel.textContent = config.obm_label + ':';
 
             let crbmOptions = [];
-            if (config.unidades && !config.unidades.crpms) { // CBMPR, PPPR, etc.
+            if (config.unidades && !config.unidades.crpms) {
                 crbmOptions = Object.keys(config.unidades).sort();
                 populateSelect(crbmSelect, crbmOptions, `Selecione a ${config.crbm_label}`, forca === 'CBMPR' ? formatCrbm : null);
                 crbmSelect.addEventListener('change', handleDynamicUnitsChange);
-            } else if (config.unidades && config.unidades.crpms) { // PMPR
+            } else if (config.unidades && config.unidades.crpms) {
                 crbmOptions = config.unidades.crpms;
                 populateSelect(crbmSelect, crbmOptions, `Selecione o ${config.crbm_label}`);
                 crbmSelect.addEventListener('change', handlePmUnitsChange);
@@ -320,8 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         checkFormValidity();
     }
-
-    // --- EVENT LISTENERS ---
 
     requiredFields.forEach(field => {
         field.addEventListener('input', checkFormValidity);
@@ -347,11 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
         checkFormValidity();
     });
 
-    // --- INICIALIZAÇÃO ---
-    // Esta chamada inicial garante que o formulário seja populado corretamente
-    // para administradores com força pré-selecionada.
     handleForcaSegurancaChange();
-    
     atualizarModelos();
     checkFormValidity();
 });
@@ -360,4 +407,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php
 // 6. INCLUI O RODAPÉ
 require_once 'includes/footer.php';
-?>
+?>  

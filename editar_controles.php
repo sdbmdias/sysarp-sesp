@@ -15,7 +15,6 @@ $controle_data = null;
 
 $controle_id = isset($_GET['id']) ? intval($_GET['id']) : (isset($_POST['controle_id']) ? intval($_POST['controle_id']) : null);
 
-// Busca aeronaves disponíveis para vincular
 $aeronaves_disponiveis = [];
 $sql_aeronaves = "SELECT id, prefixo, modelo, crbm, obm, forca_seguranca FROM aeronaves ORDER BY prefixo ASC";
 $result_aeronaves = $conn->query($sql_aeronaves);
@@ -25,7 +24,6 @@ if ($result_aeronaves->num_rows > 0) {
     }
 }
 
-// Busca fabricantes e modelos de CONTROLES do banco de dados
 $fabricantes_e_modelos_controles = [];
 $sql_modelos_ctrl = "SELECT fabricante, modelo FROM fabricantes_modelos WHERE tipo = 'Controle' ORDER BY CASE WHEN fabricante = 'DJI' THEN 1 WHEN fabricante = 'Autel Robotics' THEN 2 ELSE 3 END, fabricante, modelo";
 $result_modelos_ctrl = $conn->query($sql_modelos_ctrl);
@@ -35,10 +33,8 @@ if ($result_modelos_ctrl) {
     }
 }
 
-// Acessa os dados de unidades do config_forcas.php
 $unidades = $config_forcas;
 
-// Lógica de atualização do formulário
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $controle_id) {
     $fabricante = isset($_POST['fabricante']) ? htmlspecialchars($_POST['fabricante']) : '';
     $modelo = isset($_POST['modelo']) ? htmlspecialchars($_POST['modelo']) : '';
@@ -74,18 +70,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $controle_id) {
 
     if ($stmt->execute()) {
         $mensagem_status = "<div class='success-message-box'>Controle atualizado com sucesso! Redirecionando...</div>";
-        echo "<script>
-                setTimeout(function() {
-                    window.location.href = 'listar_controles.php';
-                }, 2000);
-              </script>";
+        echo "<script>setTimeout(function() { window.location.href = 'listar_controles.php'; }, 2000);</script>";
     } else {
         $mensagem_status = "<div class='error-message-box'>Erro ao atualizar controle: " . htmlspecialchars($stmt->error) . "</div>";
     }
     $stmt->close();
 }
 
-// Carrega os dados do controle para preencher o formulário
 if ($controle_id) {
     $stmt_load = $conn->prepare("SELECT * FROM controles WHERE id = ?");
     $stmt_load->bind_param("i", $controle_id);
@@ -102,6 +93,20 @@ if ($controle_id) {
         $mensagem_status = "<div class='error-message-box'>ID do controle não fornecido para edição.</div>";
     }
 }
+
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Iniciais Dinâmicos ***
+// ====================================================================================================
+$initial_crbm_label = 'Unidade de Lotação';
+$initial_obm_label = 'Subunidade';
+
+if (isset($controle_data['forca_seguranca']) && isset($unidades[$controle_data['forca_seguranca']])) {
+    $initial_crbm_label = $unidades[$controle_data['forca_seguranca']]['crbm_label'];
+    $initial_obm_label = $unidades[$controle_data['forca_seguranca']]['obm_label'];
+}
+// ====================================================================================================
+// *** FIM DA SEÇÃO ALTERADA ***
+// ====================================================================================================
 ?>
 
 <div class="main-content">
@@ -161,13 +166,15 @@ if ($controle_id) {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="crbm" id="crbm_label">CRBM de Lotação:</label>
+                    <?php // Rótulo agora é dinâmico ?>
+                    <label for="crbm" id="crbm_label"><?php echo htmlspecialchars($initial_crbm_label); ?> de Lotação:</label>
                     <select id="crbm" name="crbm" required>
                         <option value="">Selecione a Força de Segurança primeiro...</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="obm" id="obm_label">OBM/Seção de Lotação:</label>
+                    <?php // Rótulo agora é dinâmico ?>
+                    <label for="obm" id="obm_label"><?php echo htmlspecialchars($initial_obm_label); ?> de Lotação:</label>
                     <select id="obm" name="obm" required></select>
                 </div>
                 <div class="form-group">
@@ -204,6 +211,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('editControleForm')) {
         const configForcas = <?php echo json_encode($config_forcas); ?>;
         const modelosControlePorFabricante = <?php echo json_encode($fabricantes_e_modelos_controles); ?>;
+        const isAdmin = <?php echo json_encode($isAdmin); ?>;
+        const isSuperAdmin = <?php echo json_encode($isSuperAdmin); ?>;
+        const userForcaSeguranca = <?php echo json_encode($user_forca_seguranca); ?>;
 
         const forcaSegurancaSelect = document.getElementById('forca_seguranca');
         const fabricanteSelect = document.getElementById('fabricante');
@@ -230,6 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function populateSelect(selectElement, optionsArray, placeholder, formatCallback = null, valorPadrao = null) {
             selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+            if (!optionsArray) return;
             optionsArray.forEach(optionText => {
                 const option = document.createElement('option');
                 option.value = optionText;
@@ -244,9 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function atualizarModelos() {
             const fabricante = fabricanteSelect.value;
             modeloSelect.innerHTML = '<option value="">Selecione o Modelo</option>';
-            modeloSelect.disabled = true;
             if (fabricante && modelosControlePorFabricante[fabricante]) {
-                modeloSelect.disabled = false;
                 populateSelect(modeloSelect, modelosControlePorFabricante[fabricante], 'Selecione um modelo...', null, valorSalvo.modelo);
             }
         }
@@ -255,27 +264,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const config = configForcas[forca];
             
             if (config) {
-                crbmLabel.textContent = config.crbm_label + ':';
-                obmLabel.textContent = config.obm_label + ':';
+                crbmLabel.textContent = config.crbm_label + ' de Lotação:';
+                obmLabel.textContent = config.obm_label + ' de Lotação:';
 
-                if (config.unidades && !config.unidades.crpms) { 
-                    const crbms = Object.keys(config.unidades).sort();
-                    populateSelect(crbmSelect, crbms, `Selecione a ${crbmLabel.textContent.replace(':', '')}`, forca === 'CBMPR' ? formatCrbm : null, crbm);
-                    
-                    const obms = config.unidades[crbm] || [];
-                    populateSelect(obmSelect, obms, `Selecione a ${obmLabel.textContent.replace(':', '')}`, null, obm);
-
-                } else if (config.unidades && config.unidades.crpms) { 
-                    const crpms = config.unidades.crpms;
-                    populateSelect(crbmSelect, crpms, `Selecione o ${crbmLabel.textContent.replace(':', '')}`, null, crbm);
-
-                    const opms = config.unidades.opms_por_crpm[crbm] || [];
-                    populateSelect(obmSelect, opms, `Selecione a ${obmLabel.textContent.replace(':', '')}`, null, obm);
+                let crbms;
+                if (config.unidades && config.unidades.crpms) { 
+                    crbms = config.unidades.crpms;
+                } else {
+                    crbms = Object.keys(config.unidades || {}).sort();
                 }
+                populateSelect(crbmSelect, crbms, `Selecione...`, forca === 'CBMPR' ? formatCrbm : null, crbm);
+                
+                let obms;
+                if (config.unidades && config.unidades.opms_por_crpm) {
+                    obms = config.unidades.opms_por_crpm[crbm] || [];
+                } else {
+                    obms = config.unidades[crbm] || [];
+                }
+                populateSelect(obmSelect, obms, `Selecione...`, null, obm);
             }
         }
 
         function setupLotacaoForm(isAircraftLinked) {
+            const forcaAtual = forcaSegurancaSelect.value;
+            
             if (isAircraftLinked) {
                 const selectedOption = aeronaveSelect.options[aeronaveSelect.selectedIndex];
                 const forca = selectedOption.getAttribute('data-forca');
@@ -290,79 +302,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 obmSelect.disabled = true;
             } else {
                 forcaSegurancaSelect.disabled = (isAdmin && !isSuperAdmin);
-                crbmSelect.disabled = true;
-                obmSelect.disabled = true;
+                
+                const config = configForcas[forcaAtual];
+                if(config) {
+                    crbmLabel.textContent = config.crbm_label + ' de Lotação:';
+                    obmLabel.textContent = config.obm_label + ' de Lotação:';
 
-                const initialForca = forcaSegurancaSelect.value || (isAdmin ? userForcaSeguranca : null);
-                if (initialForca) {
-                    const config = configForcas[initialForca];
-                    crbmLabel.textContent = config.crbm_label + ':';
-                    obmLabel.textContent = config.obm_label + ':';
-                    
-                    if (config.unidades && !config.unidades.crpms) {
-                        const crbms = Object.keys(config.unidades).sort();
-                        populateSelect(crbmSelect, crbms, `Selecione a ${crbmLabel.textContent.replace(':', '')}`, initialForca === 'CBMPR' ? formatCrbm : null, valorSalvo.crbm);
-                        crbmSelect.disabled = false;
-                        crbmSelect.removeEventListener('change', handleDynamicUnitsChange);
-                        crbmSelect.addEventListener('change', handleDynamicUnitsChange);
-                    } else if (config.unidades && config.unidades.crpms) {
-                        const crpms = config.unidades.crpms;
-                        populateSelect(crbmSelect, crpms, `Selecione o ${crbmLabel.textContent.replace(':', '')}`, null, valorSalvo.crbm);
-                        crbmSelect.disabled = false;
-                        crbmSelect.removeEventListener('change', handleDynamicUnitsChange);
-                        crbmSelect.addEventListener('change', () => {
-                            const crpm = crbmSelect.value;
-                            const opms = config.unidades.opms_por_crpm[crpm] || [];
-                            populateSelect(obmSelect, opms, `Selecione a ${config.obm_label}`, null, valorSalvo.obm);
-                            obmSelect.disabled = opms.length === 0;
-                        });
+                    let crbms;
+                    if (config.unidades && config.unidades.crpms) {
+                        crbms = config.unidades.crpms;
                     } else {
-                        crbmSelect.innerHTML = '<option value="">Nenhuma unidade disponível</option>';
-                        obmSelect.innerHTML = '<option value="">Nenhuma unidade disponível</option>';
+                        crbms = Object.keys(config.unidades || {}).sort();
                     }
-                } else {
-                    crbmLabel.textContent = 'CRBM:';
-                    obmLabel.textContent = 'OBM:';
-                    crbmSelect.innerHTML = '<option value="">Selecione a Força de Segurança primeiro...</option>';
-                    obmSelect.innerHTML = '<option value="">Selecione a Unidade de Origem primeiro...</option>';
+                    populateSelect(crbmSelect, crbms, `Selecione...`, forcaAtual === 'CBMPR' ? formatCrbm : null, valorSalvo.crbm);
+                    
+                    const crbmAtual = crbmSelect.value;
+                    let obms;
+                    if(config.unidades && config.unidades.opms_por_crpm) {
+                        obms = config.unidades.opms_por_crpm[crbmAtual] || [];
+                    } else {
+                        obms = config.unidades[crbmAtual] || [];
+                    }
+                    populateSelect(obmSelect, obms, `Selecione...`, null, valorSalvo.obm);
                 }
+                crbmSelect.disabled = false;
+                obmSelect.disabled = false;
             }
         }
         
-        forcaSegurancaSelect.addEventListener('change', () => {
-            const isAircraftLinked = aeronaveSelect.value !== "";
-            if (!isAircraftLinked) {
-                setupLotacaoForm(false);
-            }
-        });
-
-        crbmSelect.addEventListener('change', () => {
-            const isAircraftLinked = aeronaveSelect.value !== "";
-            if (!isAircraftLinked) {
-                const forca = forcaSegurancaSelect.value;
-                const crbm = crbmSelect.value;
-                const config = configForcas[forca];
-                
-                let placeholderText = 'Selecione a OBM/Seção';
-                if (forca === 'Polícia Penal') {
-                    placeholderText = 'Selecione a Unidade Penal';
-                }
-                
-                obmSelect.innerHTML = `<option value="">${placeholderText}</option>`;
-                if (crbm && config.unidades[crbm]) {
-                    obmSelect.disabled = false;
-                    populateSelect(obmSelect, config.unidades[crbm], placeholderText);
+        function handleDynamicUnitsChange() {
+             const forca = forcaSegurancaSelect.value;
+             const crbm = crbmSelect.value;
+             const config = configForcas[forca];
+             if(config){
+                let obms;
+                if (config.unidades && config.unidades.opms_por_crpm) {
+                    obms = config.unidades.opms_por_crpm[crbm] || [];
                 } else {
-                    obmSelect.disabled = true;
+                    obms = config.unidades[crbm] || [];
                 }
-            }
-        });
+                populateSelect(obmSelect, obms, `Selecione a ${config.obm_label}...`);
+             }
+        }
 
-        aeronaveSelect.addEventListener('change', () => {
-            const isAircraftLinked = aeronaveSelect.value !== "";
-            setupLotacaoForm(isAircraftLinked);
-        });
-        
+        forcaSegurancaSelect.addEventListener('change', () => setupLotacaoForm(false));
+        crbmSelect.addEventListener('change', handleDynamicUnitsChange);
+        aeronaveSelect.addEventListener('change', () => setupLotacaoForm(aeronaveSelect.value !== ""));
         fabricanteSelect.addEventListener('change', atualizarModelos);
 
         // Carga inicial

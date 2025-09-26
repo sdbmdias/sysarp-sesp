@@ -11,12 +11,9 @@ if (!$isSuperAdmin) {
 // 3. LÓGICA ESPECÍFICA DA PÁGINA
 $mensagem_status = "";
 
-// ====================================================================================================
-// *** INÍCIO DA SEÇÃO CORRIGIDA: Caminho do arquivo JSON ajustado ***
-// ====================================================================================================
+// Carregamento dinâmico das Forças de Segurança do JSON
 $forcas_config = [];
 $config_error = '';
-// A linha abaixo foi corrigida para incluir a pasta 'includes' no caminho.
 $config_file_path = __DIR__ . '/includes/config_forcas.json'; 
 
 if (file_exists($config_file_path)) {
@@ -31,9 +28,6 @@ if (file_exists($config_file_path)) {
 } else {
     $config_error = 'Aviso: O arquivo de configuração config_forcas.json não foi encontrado.';
 }
-// ====================================================================================================
-// *** FIM DA SEÇÃO CORRIGIDA ***
-// ====================================================================================================
 
 
 // Processa o formulário de cadastro
@@ -81,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cadastrar_operacao']))
     }
 }
 
-// Lógica de exclusão (sem alterações)
+// Lógica de exclusão
 if ($isSuperAdmin && isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
     $stmt_get_nome = $conn->prepare("SELECT nome FROM tipos_operacao WHERE id = ?");
@@ -114,7 +108,7 @@ if ($isSuperAdmin && isset($_GET['delete_id'])) {
     $stmt_get_nome->close();
 }
 
-// Busca os tipos de operação para a lista (sem alterações)
+// Busca os tipos de operação para a lista
 $tipos_operacao = [];
 $sql_operacoes = "
     SELECT 
@@ -136,7 +130,6 @@ if ($result_operacoes && $result_operacoes->num_rows > 0) {
 <style>
 .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 700; color: #fff; white-space: nowrap; vertical-align: middle; }
 .badge i { margin-right: 4px; }
-/* Estilos para o novo layout de checkboxes */
 .checkbox-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; }
 .checkbox-item { display: flex; align-items: center; }
 .checkbox-item input[type="checkbox"] { margin-right: 10px; width: 1.2em; height: 1.2em; }
@@ -150,7 +143,6 @@ if ($result_operacoes && $result_operacoes->num_rows > 0) {
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
-/* Feedback visual para item selecionado */
 .checkbox-item input[type="checkbox"]:checked + label {
     background-color: #e0f7ff;
     color: #0056b3;

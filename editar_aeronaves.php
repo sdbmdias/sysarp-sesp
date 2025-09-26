@@ -14,7 +14,6 @@ $mensagem_status = "";
 $aeronave_data = null;
 $user_forca_seguranca = $_SESSION['forca_seguranca'] ?? '';
 
-// Busca prefixos em uso, excluindo o da aeronave atual
 $aeronave_id = isset($_GET['id']) ? intval($_GET['id']) : (isset($_POST['aeronave_id']) ? intval($_POST['aeronave_id']) : null);
 $usados_prefixos = [];
 if ($aeronave_id) {
@@ -28,7 +27,6 @@ if ($aeronave_id) {
     $stmt_prefixes->close();
 }
 
-// Busca fabricantes e modelos do banco de dados
 $fabricantes_e_modelos = [];
 $sql_modelos = "SELECT id, fabricante, modelo, tipo_drone, pmd_kg FROM fabricantes_modelos WHERE tipo = 'Aeronave' ORDER BY fabricante, modelo";
 $result_modelos = $conn->query($sql_modelos);
@@ -38,7 +36,6 @@ if ($result_modelos) {
     }
 }
 
-// Lógica de atualização do formulário
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $aeronave_id) {
     $forca_seguranca = htmlspecialchars($_POST['forca_seguranca']);
     $fabricante = htmlspecialchars($_POST['fabricante']);
@@ -54,7 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $aeronave_id) {
     $homologacao_anatel = htmlspecialchars($_POST['homologacao_anatel']);
     $info_adicionais = htmlspecialchars($_POST['info_adicionais']);
     
-    // Busca o modelo a partir do ID para obter nome e tipo
     $stmt_modelo_info = $conn->prepare("SELECT fabricante, modelo, tipo_drone, pmd_kg FROM fabricantes_modelos WHERE id = ?");
     $stmt_modelo_info->bind_param("i", $modelo_id);
     $stmt_modelo_info->execute();
@@ -69,14 +65,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $aeronave_id) {
     $stmt = $conn->prepare("UPDATE aeronaves SET fabricante=?, modelo=?, prefixo=?, numero_serie=?, cadastro_sisant=?, validade_sisant=?, crbm=?, obm=?, tipo_drone=?, pmd_kg=?, data_aquisicao=?, status=?, homologacao_anatel=?, info_adicionais=?, forca_seguranca=? WHERE id = ?");
     $stmt->bind_param("sssssssssdsssssi", $fabricante, $modelo_nome, $prefixo, $numero_serie, $cadastro_sisant, $validade_sisant, $crbm, $obm, $tipo_drone, $pmd_kg, $data_aquisicao, $status, $homologacao_anatel, $info_adicionais, $forca_seguranca, $aeronave_id);
 
-
     if ($stmt->execute()) {
         $mensagem_status = "<div class='success-message-box'>Aeronave atualizada com sucesso! Redirecionando...</div>";
-        echo "<script>
-                setTimeout(function() {
-                    window.location.href = 'listar_aeronaves.php';
-                }, 2000);
-            </script>";
+        echo "<script>setTimeout(function() { window.location.href = 'listar_aeronaves.php'; }, 2000);</script>";
     } else {
         if ($conn->errno == 1062) {
             $mensagem_status = "<div class='error-message-box'>Erro: O prefixo ou número de série já existe.</div>";
@@ -87,7 +78,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $aeronave_id) {
     $stmt->close();
 }
 
-// Carrega os dados da aeronave para preencher o formulário
 if ($aeronave_id) {
     $stmt_load = $conn->prepare("SELECT a.*, fm.tipo_drone, fm.pmd_kg, fm.id as modelo_id FROM aeronaves a LEFT JOIN fabricantes_modelos fm ON a.fabricante = fm.fabricante AND a.modelo = fm.modelo WHERE a.id = ?");
     $stmt_load->bind_param("i", $aeronave_id);
@@ -95,12 +85,10 @@ if ($aeronave_id) {
     $result = $stmt_load->get_result();
     if ($result->num_rows === 1) {
         $aeronave_data = $result->fetch_assoc();
-
         if ($isAdmin && !$isSuperAdmin && $user_forca_seguranca !== ($aeronave_data['forca_seguranca'] ?? '')) {
             $mensagem_status = "<div class='error-message-box'>Você não tem permissão para editar esta aeronave.</div>";
             $aeronave_data = null;
         }
-
     } else {
         $mensagem_status = "<div class='error-message-box'>Aeronave não encontrada.</div>";
     }
@@ -135,7 +123,7 @@ if ($aeronave_id) {
                 </div>
                 <div class="form-group">
                     <label for="prefixo">Prefixo:</label>
-                    <select id="prefixo" name="prefixo" required> </select>
+                    <select id="prefixo" name="prefixo" required></select>
                 </div>
                 <div class="form-group">
                     <label for="fabricante">Fabricante:</label>
@@ -148,7 +136,7 @@ if ($aeronave_id) {
                 </div>
                 <div class="form-group">
                     <label for="modelo">Modelo:</label>
-                    <select id="modelo" name="modelo" required> </select>
+                    <select id="modelo" name="modelo" required></select>
                 </div>
                 <div class="form-group">
                     <label for="numero_serie">Número de Série:</label>
@@ -164,12 +152,11 @@ if ($aeronave_id) {
                 </div>
                 <div class="form-group">
                     <label for="crbm" id="crbm_label">CRBM:</label>
-                    <select id="crbm" name="crbm" required>
-                    </select>
+                    <select id="crbm" name="crbm" required></select>
                 </div>
                 <div class="form-group">
                     <label for="obm" id="obm_label">OBM/Seção:</label>
-                    <select id="obm" name="obm" required> </select>
+                    <select id="obm" name="obm" required></select>
                 </div>
                 <div class="form-group">
                     <label for="tipo_drone">Tipo de Drone:</label>
@@ -213,11 +200,15 @@ if ($aeronave_id) {
     <?php endif; ?>
 </div>
 
+<?php // ==================================================================================================== ?>
+<?php // *** INÍCIO DA SEÇÃO ALTERADA: Bloco de JavaScript substituído por versão completa e correta *** ?>
+<?php // ==================================================================================================== ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('editAeronaveForm')) {
         const modelosPorFabricante = <?php echo json_encode($fabricantes_e_modelos); ?>;
         const configForcas = <?php echo json_encode($config_forcas); ?>;
+        const usadosPrefixos = <?php echo json_encode($usados_prefixos); ?>;
 
         const forcaSegurancaSelect = document.getElementById('forca_seguranca');
         const fabricanteSelect = document.getElementById('fabricante');
@@ -233,27 +224,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const valorSalvo = {
             forca_seguranca: "<?php echo addslashes($aeronave_data['forca_seguranca'] ?? ''); ?>",
             fabricante: "<?php echo addslashes($aeronave_data['fabricante'] ?? ''); ?>",
-            modelo: "<?php echo addslashes($aeronave_data['modelo'] ?? ''); ?>",
+            modelo_id: "<?php echo addslashes($aeronave_data['modelo_id'] ?? ''); ?>",
             crbm: "<?php echo addslashes($aeronave_data['crbm'] ?? ''); ?>",
             obm: "<?php echo addslashes($aeronave_data['obm'] ?? ''); ?>",
             prefixo: "<?php echo addslashes($aeronave_data['prefixo'] ?? ''); ?>",
         };
         
-        function populateSelect(selectElement, optionsArray, selectedValue, addEmptyOption = true, placeholderText = 'Selecione...') {
-            selectElement.innerHTML = '';
-            if (addEmptyOption) {
-                selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
-            }
+        function populateSelect(selectElement, optionsArray, selectedValue, placeholderText = 'Selecione...') {
+            selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
             if (!optionsArray) return;
             optionsArray.forEach(optionText => {
                 const option = document.createElement('option');
                 option.value = optionText;
-                if (optionText.includes('CRBM') || optionText.includes('CRPM') || optionText.includes('CIPM')) {
-                    option.textContent = optionText.replace(/(\d+)\s*CRPM/, '$1º CRPM').replace(/(\d+)\s*CIPM/, '$1ª CIPM');
-                    option.textContent = option.textContent.replace(/(\d)(CRBM)/, '$1º $2');
-                } else {
-                    option.textContent = optionText;
-                }
+                option.textContent = formatLabel(optionText);
                 if (optionText === selectedValue) {
                     option.selected = true;
                 }
@@ -261,40 +244,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        function updateLabelsAndOptions() {
-            const forca = forcaSegurancaSelect.value;
-            const config = configForcas[forca];
-            
-            if (config) {
-                crbmLabel.textContent = config.crbm_label + ':';
-                obmLabel.textContent = config.obm_label + ':';
-                
-                let crbms;
-                if (config.unidades.crpms) { 
-                    crbms = config.unidades.crpms;
-                    populateSelect(crbmSelect, crbms, valorSalvo.crbm, true, `Selecione o ${config.crbm_label}`);
-                } else {
-                    crbms = Object.keys(config.unidades);
-                    populateSelect(crbmSelect, crbms, valorSalvo.crbm, true, `Selecione a ${config.crbm_label}`);
-                }
-                updateObmsFromCrbm(true);
+        function formatLabel(text) {
+             if (text.match(/^\d+CRBM$/i) || text.match(/^\d+CRPM$/i)) {
+                return text.replace(/(\d+)(CRBM|CRPM)/i, '$1º $2').toUpperCase();
             }
+            return text;
         }
         
-        function updateModelos() {
+        function updateModelos(isInitialLoad = false) {
             const fabricante = fabricanteSelect.value;
             modeloSelect.innerHTML = '<option value="">Selecione o Modelo</option>';
             tipoDroneInput.value = '';
             pmdKgInput.value = '';
-            modeloSelect.disabled = true;
 
             if (fabricante && modelosPorFabricante[fabricante]) {
-                modeloSelect.disabled = false;
                 modelosPorFabricante[fabricante].forEach(function(modelo) {
                     const option = document.createElement('option');
                     option.value = modelo.id;
                     option.textContent = modelo.modelo;
-                    if (modelo.modelo === valorSalvo.modelo) {
+                    if (isInitialLoad && modelo.id == valorSalvo.modelo_id) {
                         option.selected = true;
                         tipoDroneInput.value = modelo.tipo_drone;
                         pmdKgInput.value = modelo.pmd_kg;
@@ -309,44 +277,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const crbm = crbmSelect.value;
             const config = configForcas[forca];
             
-            let obmPlaceholder = 'Selecione a ' + (config ? config.obm_label : 'Unidade');
-            obmSelect.innerHTML = `<option value="">${obmPlaceholder}</option>`;
-            obmSelect.disabled = true;
+            obmSelect.innerHTML = `<option value="">Selecione...</option>`;
             
             if (crbm && config) {
                 let obms;
-                if (config.unidades.opms_por_crpm) {
+                if (config.unidades.opms_por_crpm) { // PMPR
                     obms = config.unidades.opms_por_crpm[crbm] || [];
-                } else {
+                } else { // Outras forças
                     obms = config.unidades[crbm] || [];
                 }
                 
-                if (obms.length > 0) {
-                    obmSelect.disabled = false;
-                    obms.forEach(function(obm) {
-                        const option = document.createElement('option');
-                        option.value = obm;
-                        option.textContent = obm;
-                        if (isInitialLoad && obm === valorSalvo.obm) {
-                            option.selected = true;
-                        }
-                        obmSelect.appendChild(option);
-                    });
-                }
+                populateSelect(obmSelect, obms, 'Selecione...', isInitialLoad ? valorSalvo.obm : null);
             }
         }
 
         function gerarPrefixos() {
             prefixoSelect.innerHTML = '';
-            const prefixosUsados = <?php echo json_encode($usados_prefixos); ?>;
-
+            
             const optionAtual = document.createElement('option');
             optionAtual.value = valorSalvo.prefixo;
             optionAtual.textContent = valorSalvo.prefixo;
             optionAtual.selected = true;
             prefixoSelect.appendChild(optionAtual);
 
-            // Adicionado para usar a chave corrigida "prefixo_aeronave"
             const forca = forcaSegurancaSelect.value;
             if (forca && configForcas[forca] && configForcas[forca].prefixo_aeronave) {
                 const prefixoBase = configForcas[forca].prefixo_aeronave;
@@ -354,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const nomePrefixo = `${prefixoBase} ${i.toString().padStart(2, '0')}`;
                     if (nomePrefixo === valorSalvo.prefixo) continue;
 
-                    if (!prefixosUsados.includes(nomePrefixo)) {
+                    if (!usadosPrefixos.includes(nomePrefixo)) {
                         const option = document.createElement('option');
                         option.value = nomePrefixo;
                         option.textContent = nomePrefixo;
@@ -363,37 +316,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
+        
+        function initializeForm() {
+            const forca = valorSalvo.forca_seguranca;
+            if (!forca || !configForcas[forca]) return;
 
-        fabricanteSelect.addEventListener('change', updateModelos);
-        modeloSelect.addEventListener('change', function() {
-            const modeloId = this.value;
-            const fabricante = fabricanteSelect.value;
-            const modelosDoFabricante = modelosPorFabricante[fabricante];
-            const modeloSelecionado = modelosDoFabricante.find(mod => mod.id == modeloId);
+            const config = configForcas[forca];
 
-            if (modeloSelecionado) {
-                tipoDroneInput.value = modeloSelecionado.tipo_drone;
-                pmdKgInput.value = modeloSelecionado.pmd_kg;
+            crbmLabel.textContent = config.crbm_label + ':';
+            obmLabel.textContent = config.obm_label + ':';
+
+            let crbms;
+            if (config.unidades.crpms) { // PMPR
+                crbms = config.unidades.crpms;
+            } else { // Outras forças
+                crbms = Object.keys(config.unidades).sort();
             }
-        });
-        crbmSelect.addEventListener('change', updateObmsFromCrbm);
-        
-        // --- INICIALIZAÇÃO ---
-        // CORREÇÃO APLICADA: Estas funções são chamadas diretamente
-        // para popular o formulário com os dados existentes ao carregar a página.
-        gerarPrefixos();
-        updateLabelsAndOptions();
-        updateModelos();
-        
-        const successMessage = document.querySelector('.success-message-box');
-        if (successMessage) {
-            setTimeout(function() {
-                window.location.href = 'listar_aeronaves.php';
-            }, 2000);
+            populateSelect(crbmSelect, crbms, 'Selecione...', valorSalvo.crbm);
+            updateObmsFromCrbm(true);
+            updateModelos(true);
+            gerarPrefixos();
+
+            crbmSelect.addEventListener('change', () => updateObmsFromCrbm(false));
+            fabricanteSelect.addEventListener('change', () => updateModelos(false));
         }
+        
+        initializeForm();
     }
 });
 </script>
+<?php // ==================================================================================================== ?>
+<?php // *** FIM DA SEÇÃO ALTERADA *** ?>
+<?php // ==================================================================================================== ?>
 
 <?php
 // 6. INCLUI O RODAPÉ

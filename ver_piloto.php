@@ -2,6 +2,9 @@
 // 1. INCLUI O CABEÇALHO PADRÃO
 require_once 'includes/header.php';
 
+// Adicionado para carregar as configurações das forças
+$forcas_config = json_decode(file_get_contents(__DIR__ . '/includes/config_forcas.json'), true);
+
 // 2. VERIFICAÇÃO DE PERMISSÃO
 if (!$isAdmin && !$isSuperAdmin) {
     header("Location: dashboard.php");
@@ -29,6 +32,25 @@ if (!$piloto_id) {
     }
     $stmt_load->close();
 }
+
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Dinâmicos ***
+// ====================================================================================================
+$posto_label = 'Posto/Graduação';
+$crbm_label = 'Unidade Superior';
+$obm_label = 'Subunidade';
+$cparp_label = 'CPARP';
+
+if (isset($piloto_data['forca_seguranca']) && isset($forcas_config[$piloto_data['forca_seguranca']])) {
+    $config_piloto = $forcas_config[$piloto_data['forca_seguranca']];
+    $posto_label = $config_piloto['posto_graduacao_label'] ?? $posto_label;
+    $crbm_label = $config_piloto['crbm_label'] ?? $crbm_label;
+    $obm_label = $config_piloto['obm_label'] ?? $obm_label;
+    $cparp_label = $config_piloto['cparp_label'] ?? $cparp_label;
+}
+// ====================================================================================================
+// *** FIM DA SEÇÃO ALTERADA ***
+// ====================================================================================================
 ?>
 
 <div class="main-content">
@@ -40,7 +62,7 @@ if (!$piloto_id) {
     <div class="form-container">
         <div class="detail-grid">
             <div class="detail-group">
-                <label>Posto/Graduação:</label>
+                <label><?php echo htmlspecialchars($posto_label); ?>:</label>
                 <span><?php echo htmlspecialchars($piloto_data['posto_graduacao'] ?? 'N/A'); ?></span>
             </div>
             <div class="detail-group">
@@ -64,11 +86,12 @@ if (!$piloto_id) {
                 <span><?php echo htmlspecialchars($piloto_data['telefone'] ?? 'N/A'); ?></span>
             </div>
             <div class="detail-group">
-                <label>CRBM:</label>
-                <span><?php echo htmlspecialchars(preg_replace('/(\d)(CRBM)/', '$1º $2', $piloto_data['crbm_piloto'] ?? 'N/A')); ?></span>
+                <label><?php echo htmlspecialchars($crbm_label); ?>:</label>
+                <?php // Formatação dinâmica do valor ?>
+                <span><?php echo htmlspecialchars(preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $piloto_data['crbm_piloto'] ?? 'N/A')); ?></span>
             </div>
             <div class="detail-group">
-                <label>OBM/Seção:</label>
+                <label><?php echo htmlspecialchars($obm_label); ?>:</label>
                 <span><?php echo htmlspecialchars($piloto_data['obm_piloto'] ?? 'N/A'); ?></span>
             </div>
             <div class="detail-group">
@@ -76,7 +99,7 @@ if (!$piloto_id) {
                 <span><?php echo htmlspecialchars($piloto_data['cadastro_sarpas'] ?? 'N/A'); ?></span>
             </div>
             <div class="detail-group">
-                <label>CPARP:</label>
+                <label><?php echo htmlspecialchars($cparp_label); ?>:</label>
                 <span><?php echo htmlspecialchars($piloto_data['cparp'] ?? 'N/A'); ?></span>
             </div>
             <div class="detail-group">

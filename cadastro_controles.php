@@ -48,20 +48,17 @@ if ($result_modelos_ctrl) {
 
 // --- Lógica para processar o formulário quando enviado ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Coleta dos dados do formulário com verificação para evitar erros
     $fabricante = htmlspecialchars($_POST['fabricante'] ?? '');
     $modelo = htmlspecialchars($_POST['modelo'] ?? '');
     $numero_serie = htmlspecialchars($_POST['numero_serie'] ?? '');
     $forca_seguranca = htmlspecialchars($_POST['forca_seguranca'] ?? '');
     $homologacao_anatel = htmlspecialchars($_POST['homologacao_anatel'] ?? '');
     $aeronave_id = !empty($_POST['aeronave_id']) ? intval($_POST['aeronave_id']) : NULL;
-    $status = htmlspecialchars($_POST['status'] ?? 'ativo'); // Campo de status adicionado
+    $status = htmlspecialchars($_POST['status'] ?? 'ativo');
     
-    // Inicializa as variáveis de lotação
     $crbm = htmlspecialchars($_POST['crbm'] ?? '');
     $obm = htmlspecialchars($_POST['obm'] ?? '');
 
-    // Se uma aeronave foi vinculada, busca os dados de lotação da aeronave
     if ($aeronave_id) {
         $stmt_acft_data = $conn->prepare("SELECT crbm, obm, forca_seguranca FROM aeronaves WHERE id = ?");
         $stmt_acft_data->bind_param("i", $aeronave_id);
@@ -71,7 +68,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $acft_data = $result_acft_data->fetch_assoc();
             $crbm = $acft_data['crbm'];
             $obm = $acft_data['obm'];
-            // Atualiza a forca_seguranca com a da aeronave
             $forca_seguranca = $acft_data['forca_seguranca'];
         }
         $stmt_acft_data->close();
@@ -82,11 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt->execute()) {
         $mensagem_status = "<div class='success-message-box'>Controle cadastrado com sucesso! Redirecionando...</div>";
-        echo "<script>
-                setTimeout(function() {
-                    window.location.href = 'listar_controles.php';
-                }, 2000);
-              </script>";
+        echo "<script>setTimeout(function() { window.location.href = 'listar_controles.php'; }, 2000);</script>";
     } else {
         if ($conn->errno == 1062) {
             $mensagem_status = "<div class='error-message-box'>Erro: O número de série já existe. Por favor, insira um número de série único.</div>";
@@ -96,6 +88,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $stmt->close();
 }
+
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Iniciais Dinâmicos ***
+// ====================================================================================================
+$initial_crbm_label = 'Unidade de Lotação';
+$initial_obm_label = 'Subunidade';
+
+if ($isAdmin && !$isSuperAdmin && isset($unidades_config[$user_forca_seguranca])) {
+    $initial_crbm_label = $unidades_config[$user_forca_seguranca]['crbm_label'];
+    $initial_obm_label = $unidades_config[$user_forca_seguranca]['obm_label'];
+}
+// ====================================================================================================
+// *** FIM DA SEÇÃO ALTERADA ***
+// ====================================================================================================
 ?>
 
 <div class="main-content">
@@ -140,13 +146,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <input type="text" id="numero_serie" name="numero_serie" placeholder="Nº de Série do Controle" required>
                 </div>
                 <div class="form-group">
-                    <label for="crbm" id="crbm_label">CRBM:</label>
+                    <?php // Rótulo agora é dinâmico ?>
+                    <label for="crbm" id="crbm_label"><?php echo htmlspecialchars($initial_crbm_label); ?>:</label>
                     <select id="crbm" name="crbm" required disabled>
                         <option value="">Selecione a Força de Segurança primeiro</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="obm" id="obm_label">OBM:</label>
+                    <?php // Rótulo agora é dinâmico ?>
+                    <label for="obm" id="obm_label"><?php echo htmlspecialchars($initial_obm_label); ?>:</label>
                     <select id="obm" name="obm" required disabled>
                         <option value="">Selecione a Unidade de Origem primeiro</option>
                     </select>
@@ -206,7 +214,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const obmSelect = document.getElementById('obm');
     const aeronaveSelect = document.getElementById('aeronave_id');
 
-    // Function to format the CRBM/CRPM
+    // --- FUNÇÕES (permanecem inalteradas) ---
+    
     function formatCrbm(crbm) {
         if (crbm && (crbm.match(/^\d+CRBM$/i) || crbm.match(/^\d+CRPM$/i))) {
             return crbm.replace(/(\d+)(CRBM|CRPM)/i, '$1º $2').toUpperCase();
@@ -214,7 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return crbm;
     }
 
-    // Function to populate a select element
     function populateSelect(selectElement, optionsArray, placeholder, formatCallback = null) {
         selectElement.innerHTML = `<option value="">${placeholder}</option>`;
         optionsArray.forEach(optionText => {
@@ -225,7 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to update Modelo select based on Fabricante
     function atualizarModelos() {
         const fabricante = fabricanteSelect.value;
         modeloSelect.innerHTML = '<option value="">Selecione um modelo...</option>';
@@ -241,10 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const crbm = this.value;
         const config = configForcas[forca];
 
-        let placeholderText = 'Selecione a OBM/Seção';
-        if (forca === 'Polícia Penal') {
-            placeholderText = 'Selecione a Unidade Penal';
-        }
+        let placeholderText = `Selecione a ${config?.obm_label ?? 'Subunidade'}`;
         
         obmSelect.innerHTML = `<option value="">${placeholderText}</option>`;
         
@@ -291,8 +295,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const forca = forcaPreSelecionada || forcaSegurancaSelect.value;
         const config = configForcas[forca];
         
-        crbmSelect.innerHTML = `<option value="">Selecione a ${configForcas[forca]?.crbm_label ?? 'Unidade'}...</option>`;
-        obmSelect.innerHTML = `<option value="">Selecione a ${configForcas[forca]?.obm_label ?? 'Unidade'}...</option>`;
+        const defaultCrbmLabel = config?.crbm_label ?? 'Unidade de Lotação';
+        const defaultObmLabel = config?.obm_label ?? 'Subunidade';
+
+        crbmSelect.innerHTML = `<option value="">Selecione a ${defaultCrbmLabel}...</option>`;
+        obmSelect.innerHTML = `<option value="">Selecione a ${defaultObmLabel}...</option>`;
         
         crbmSelect.disabled = true;
         obmSelect.disabled = true;
@@ -361,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (forcaSegurancaSelect) {
-        forcaSegurancaSelect.addEventListener('change', handleForcaSegurancaChange);
+        forcaSegurancaSelect.addEventListener('change', () => handleForcaSegurancaChange());
         
         const selectedForca = forcaSegurancaSelect.value;
         if (selectedForca) {

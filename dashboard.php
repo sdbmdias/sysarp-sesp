@@ -2,6 +2,10 @@
 // 1. INCLUI O CABEÇALHO E AS VERIFICAÇÕES DE SEGURANÇA
 require_once 'includes/header.php';
 
+// Adicionado para carregar as configurações das forças
+$forcas_config = json_decode(file_get_contents(__DIR__ . '/includes/config_forcas.json'), true);
+
+
 // 2. LÓGICA ESPECÍFICA DO DASHBOARD
 $total_pilotos = 0;
 $total_aeronaves = 0;
@@ -119,13 +123,11 @@ $where_clauses_missoes = [];
 $params_missoes = [];
 $types_missoes = '';
 
-// Adiciona filtro por Força de Segurança para Administradores
 if ($isAdmin && !$isSuperAdmin && !empty($fs_do_usuario)) {
     $where_clauses_missoes[] = "a.forca_seguranca = ?";
     $params_missoes[] = $fs_do_usuario;
     $types_missoes .= 's';
 }
-// Adiciona filtro por OBM para usuários do tipo 'Piloto'
 if ($isPiloto && !empty($obm_do_usuario)) {
     $where_clauses_missoes[] = "a.obm = ?";
     $params_missoes[] = $obm_do_usuario;
@@ -230,29 +232,34 @@ function formatarTempoVoo($segundos) {
                     <p><?php echo htmlspecialchars($total_manutencoes); ?></p>
                 </div>
             </div>
-        <?php elseif ($isPiloto): ?>
+        <?php elseif ($isPiloto): 
+                // *** INÍCIO DA SEÇÃO ALTERADA ***
+                // Busca os rótulos corretos do array de configuração
+                $crbm_label = $forcas_config[$fs_do_usuario]['crbm_label'] ?? 'CRBM';
+                $obm_label = $forcas_config[$fs_do_usuario]['obm_label'] ?? 'OBM';
+            ?>
             <div class="card">
                 <div class="card-icon" style="background-color: #e9fbf0; color: #52c41a;"><i class="fas fa-plane"></i></div>
                 <div class="card-content">
-                    <h2>Aeronaves no seu <?php echo htmlspecialchars(($fs_do_usuario === 'PMPR') ? 'CRPM' : 'CRBM'); ?></h2>
+                    <h2>Aeronaves no seu <?php echo htmlspecialchars($crbm_label); ?></h2>
                     <p><?php echo htmlspecialchars($total_aeronaves); ?></p>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon" style="background-color: #fffbe6; color: #faad14;"><i class="fas fa-map-marked-alt"></i></div>
                 <div class="card-content">
-                    <h2>Missões (seu <?php echo htmlspecialchars(($fs_do_usuario === 'PMPR') ? 'CRPM' : 'CRBM'); ?>)</h2>
+                    <h2>Missões (seu <?php echo htmlspecialchars($crbm_label); ?>)</h2>
                     <p><?php echo htmlspecialchars($total_missoes); ?></p>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon" style="background-color: #fce8e7; color: #f5222d;"><i class="fas fa-tools"></i></div>
                 <div class="card-content">
-                    <h2>Manutenções (sua <?php echo htmlspecialchars(($fs_do_usuario === 'PMPR') ? 'OPM' : 'OBM'); ?>)</h2>
+                    <h2>Manutenções (sua <?php echo htmlspecialchars($obm_label); ?>)</h2>
                     <p><?php echo htmlspecialchars($total_manutencoes); ?></p>
                 </div>
             </div>
-        <?php endif; ?>
+        <?php endif; // *** FIM DA SEÇÃO ALTERADA *** ?>
     </div>
 
     <div class="recent-missions">

@@ -160,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     equipamentoIdSelect.appendChild(option);
                 });
                 
-                // Se o tipo selecionado for o mesmo que o salvo, seleciona o ID correto
                 if (tipoSelecionado === valorSalvo.tipo) {
                     equipamentoIdSelect.value = valorSalvo.id;
                 }
@@ -169,16 +168,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tipoEquipamentoSelect.addEventListener('change', popularEquipamentos);
         
-        // Carga inicial do formulário
         popularEquipamentos();
     }
 
     const successMessage = document.querySelector('.success-message-box');
     if (successMessage) {
         setTimeout(function() {
-            // Redireciona de volta para a página de detalhes da manutenção que acabou de ser editada
             window.location.href = 'ver_manutencao.php?id=<?php echo $manutencao_id; ?>';
-        }, 2000); // 2 segundos
+        }, 2000);
     }
 });
 </script>

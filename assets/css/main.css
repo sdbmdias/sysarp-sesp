@@ -81,6 +81,39 @@ body.theme-policia-penal {
     --color-user-role-border: #666666;
 }
 
+/* Estilos Específicos para a Força Defesa Civil Estadual */
+body.theme-defesa-civil-estadual {
+    --color-sidebar-bg: #e77601;
+    --color-text-sidebar: #fff; /* Branco para alto contraste com laranja */
+    --color-sidebar-item-hover-bg: #d35400; /* Laranja mais escuro */
+    --color-sidebar-item-active-border: #fff; /* Borda branca para destaque */
+    --color-submenu-bg: #c06a02; /* Tom intermediário de laranja */
+    --color-submenu-item-hover-bg: #d35400;
+    --color-user-role-border: #f39c12; /* Laranja mais claro */
+}
+
+/* Estilos Específicos para a Força Polícia Civil (PCPR) */
+body.theme-pcpr {
+    --color-sidebar-bg: #c7b383;
+    --color-text-sidebar: #000; /* Preto para alto contraste com bege */
+    --color-sidebar-item-hover-bg: #b3975d; /* Bege mais escuro */
+    --color-sidebar-item-active-border: #000; /* Borda preta para destaque */
+    --color-submenu-bg: #ab9a6f; /* Tom intermediário de bege */
+    --color-submenu-item-hover-bg: #b3975d;
+    --color-user-role-border: #a18a51;
+}
+
+/* Estilos Específicos para a Força Polícia Científica */
+body.theme-policia-cientifica {
+    --color-sidebar-bg: #f1e16c;
+    --color-text-sidebar: #000; /* Preto para alto contraste com amarelo */
+    --color-sidebar-item-hover-bg: #e0d15a; /* Amarelo mais escuro */
+    --color-sidebar-item-active-border: #000; /* Borda preta para destaque */
+    --color-submenu-bg: #d9c961; /* Tom intermediário de amarelo */
+    --color-submenu-item-hover-bg: #e0d15a;
+    --color-user-role-border: #c7b85a;
+}
+
 /* Estilos Globais para o Body e Elementos Comuns */
 body {
     margin: 0;
@@ -217,7 +250,7 @@ textarea:focus {
 /* Sidebar */
 .sidebar {
     width: 250px;
-    background-color: var(--color-sidebar-bg); /* AJUSTADO */
+    background-color: var(--color-sidebar-bg); 
     color: var(--color-text-sidebar);
     padding-top: 20px;
     box-shadow: 2px 0 5px var(--color-box-shadow-light);
@@ -241,7 +274,7 @@ textarea:focus {
     padding: 15px 20px;
     color: var(--color-text-sidebar);
     text-decoration: none;
-    font-size: 18px; /* Mantido em PX para não ser afetado pelo font-size do body */
+    font-size: 18px; 
     line-height: 1.2;
     transition: background-color .3s ease;
 }
@@ -255,8 +288,8 @@ textarea:focus {
 
 .sidebar ul li a:hover,
 .sidebar ul li a.active {
-    background-color: var(--color-sidebar-item-hover-bg); /* AJUSTADO */
-    border-left: 5px solid var(--color-sidebar-item-active-border); /* AJUSTADO */
+    background-color: var(--color-sidebar-item-hover-bg); 
+    border-left: 5px solid var(--color-sidebar-item-active-border); 
     padding-left: 15px;
 }
 
@@ -285,19 +318,19 @@ textarea:focus {
     max-height: 0;
     overflow: hidden;
     transition: max-height .3s ease-out;
-    background-color: var(--color-submenu-bg); /* AJUSTADO */
+    background-color: var(--color-submenu-bg); 
 }
 
 .sidebar ul li .submenu li a {
     padding: 10px 20px 10px 45px;
-    font-size: 17px; /* Mantido em PX para não ser afetado pelo font-size do body */
+    font-size: 17px; 
     background-color: transparent;
 }
 
 .sidebar ul li .submenu li a:hover,
 .sidebar ul li .submenu li a.active {
-    background-color: var(--color-submenu-item-hover-bg); /* AJUSTADO */
-    border-left: 5px solid var(--color-sidebar-item-active-border); /* AJUSTADO */
+    background-color: var(--color-submenu-item-hover-bg); 
+    border-left: 5px solid var(--color-sidebar-item-active-border); 
 }
 
 .sidebar ul li .submenu.open {
@@ -410,22 +443,22 @@ body .main-content { /* Adicionado body para maior especificidade */
     padding: 15px 20px;
     text-align: center;
     color: var(--color-user-role-text-light);
-    font-size: 14px; /* Mantido em PX */
+    font-size: 14px; 
     line-height: 1.4;
-    border-top: 1px solid var(--color-user-role-border); /* AJUSTADO */
+    border-top: 1px solid var(--color-user-role-border); 
     width: 100%;
     box-sizing: border-box;
 }
 
 .user-role-display p { margin: 0; }
-.user-role-display strong { color: var(--color-text-sidebar); font-size: 15px; } /* Mantido em PX */
+.user-role-display strong { color: var(--color-text-sidebar); font-size: 15px; } 
 
 /* Mobile Header e Overlay */
 .mobile-header {
     display: none;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--color-sidebar-bg); /* AJUSTADO */
+    background-color: var(--color-sidebar-bg); 
     color: var(--color-text-sidebar);
     padding: 10px 15px;
     position: fixed;

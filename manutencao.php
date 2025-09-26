@@ -2,6 +2,27 @@
 // 1. INCLUI O CABEÇALHO PADRÃO
 require_once 'includes/header.php';
 
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ADICIONADA: Busca o status do piloto logado ***
+// ====================================================================================================
+$logged_in_pilot_status = '';
+if ($isPiloto && isset($_SESSION['user_id'])) {
+    $stmt_status = $conn->prepare("SELECT status_piloto FROM pilotos WHERE id = ?");
+    if ($stmt_status) {
+        $stmt_status->bind_param("i", $_SESSION['user_id']);
+        $stmt_status->execute();
+        $result_status = $stmt_status->get_result();
+        if ($result_status->num_rows > 0) {
+            $logged_in_pilot_status = $result_status->fetch_assoc()['status_piloto'];
+        }
+        $stmt_status->close();
+    }
+}
+// ====================================================================================================
+// *** FIM DA SEÇÃO ADICIONADA ***
+// ====================================================================================================
+
+
 // 2. LÓGICA PARA BUSCAR O HISTÓRICO DE MANUTENÇÕES
 $historico_manutencoes = [];
 $manutencoes_por_crbm = [];
@@ -11,19 +32,16 @@ $manutencoes_por_fs_e_crbm = [];
 $sort_column = isset($_GET['sort']) ? $_GET['sort'] : 'data_manutencao';
 $sort_order = isset($_GET['order']) && strtolower($_GET['order']) == 'asc' ? 'ASC' : 'DESC';
 
-// Validação da coluna de ordenação
 $allowed_columns = ['data_manutencao', 'equipamento', 'tipo_manutencao'];
 if (!in_array($sort_column, $allowed_columns)) {
     $sort_column = 'data_manutencao';
 }
-
 $order_by_sort_column = "";
 if ($sort_column === 'equipamento') {
     $order_by_sort_column = "m.equipamento_tipo $sort_order, aeronave_prefixo $sort_order, controle_sn $sort_order";
 } else {
     $order_by_sort_column = "m.$sort_column $sort_order";
 }
-
 
 $sql_base = "SELECT 
                 m.*, 
@@ -42,31 +60,23 @@ $sql_base = "SELECT
              LEFT JOIN aeronaves a_vinc ON c.aeronave_id = a_vinc.id";
 
 if ($isSuperAdmin) {
-    // Super Admin vê tudo, agrupado por Força de Segurança e depois por CRBM
     $sql_historico = $sql_base . " ORDER BY a.forca_seguranca ASC, c.forca_seguranca ASC, a.crbm ASC, c.crbm ASC, " . $order_by_sort_column;
     $result_historico = $conn->query($sql_historico);
-    
-    // Organiza os resultados em um array agrupado por Força de Segurança e depois por CRBM
     if ($result_historico && $result_historico->num_rows > 0) {
         while ($row = $result_historico->fetch_assoc()) {
             $fs_do_registro = $row['aeronave_fs'] ?? $row['controle_fs'];
             $crbm_do_registro = $row['aeronave_crbm'] ?? $row['controle_crbm'];
-
             if (empty($fs_do_registro)) $fs_do_registro = 'Sem Força de Segurança Definida';
             if (empty($crbm_do_registro)) $crbm_do_registro = 'Sem CRBM Definido';
-
             $manutencoes_por_fs_e_crbm[$fs_do_registro][$crbm_do_registro][] = $row;
         }
     }
-
 } elseif ($isAdmin) {
-    // Admin vê somente da sua Força de Segurança
     $sql_historico = $sql_base . " WHERE a.forca_seguranca = ? OR c.forca_seguranca = ? ORDER BY a.crbm ASC, c.crbm ASC, " . $order_by_sort_column;
     $stmt_historico = $conn->prepare($sql_historico);
     $stmt_historico->bind_param("ss", $user_forca_seguranca, $user_forca_seguranca);
     $stmt_historico->execute();
     $result_historico = $stmt_historico->get_result();
-
     if ($result_historico) {
         while ($row = $result_historico->fetch_assoc()) {
             $crbm_do_registro = $row['aeronave_crbm'] ?? $row['controle_crbm'];
@@ -86,7 +96,6 @@ if ($isSuperAdmin) {
         $obm_do_piloto = $result_obm->fetch_assoc()['obm_piloto'];
     }
     $stmt_obm->close();
-
     if (!empty($obm_do_piloto)) {
         $sql_historico = $sql_base . " WHERE (a.obm = ? OR c.obm = ?) ORDER BY " . $order_by_sort_column;
         $stmt_historico = $conn->prepare($sql_historico);
@@ -100,8 +109,6 @@ if ($isSuperAdmin) {
         }
     }
 }
-
-// Helper para links de ordenação
 function get_sort_link_manutencao($column, $current_column, $current_order) {
     $order = ($column == $current_column && $current_order == 'desc') ? 'asc' : 'desc';
     return "?sort=$column&order=$order";
@@ -121,9 +128,12 @@ function get_sort_link_manutencao($column, $current_column, $current_order) {
 <div class="main-content">
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
         <h1>Histórico de Manutenções</h1>
+        <?php // *** ALTERAÇÃO APLICADA AQUI *** ?>
+        <?php if ( ($isSuperAdmin || $isAdmin) || ($isPiloto && $logged_in_pilot_status === 'ativo') ): ?>
         <a href="cadastro_manutencao.php" class="form-actions button" style="text-decoration: none; display: inline-block; padding: 10px 20px; background-color:#28a745; color:#fff;">
             <i class="fas fa-plus"></i> Registrar Nova Manutenção
         </a>
+        <?php endif; ?>
     </div>
 
     <?php if ($isSuperAdmin): ?>

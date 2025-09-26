@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/header.php';
 require_once 'gpx_parser.php'; 
+require_once 'includes/config_forcas.php';
 
 $mensagem_status = "";
 
@@ -8,35 +9,59 @@ $mensagem_status = "";
 $aeronaves_disponiveis = [];
 $tipos_operacao = [];
 
-// Bloco para buscar aeronaves (sem alterações)
+$aeronave_label_sufixo = '(Prefixo)'; // Padrão para Super Admin
+if (($isAdmin || $isPiloto) && !$isSuperAdmin && isset($config_forcas[$user_forca_seguranca])) {
+    $aeronave_label_sufixo = '(' . htmlspecialchars($config_forcas[$user_forca_seguranca]['prefixo_aeronave']) . ')';
+}
+
+
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ALTERADA: Lógica de filtragem de aeronaves aprimorada ***
+// ====================================================================================================
 if ($isPiloto) {
-    $stmt_crbm = $conn->prepare("SELECT crbm_piloto FROM pilotos WHERE id = ?");
-    $stmt_crbm->bind_param("i", $_SESSION['user_id']);
-    $stmt_crbm->execute();
-    $result_crbm = $stmt_crbm->get_result();
-    $crbm_do_piloto = $result_crbm->fetch_assoc()['crbm_piloto'];
-    $stmt_crbm->close();
+    // Para pilotos, busca a OBM específica para filtrar as aeronaves
+    $obm_do_piloto = '';
+    $stmt_obm = $conn->prepare("SELECT obm_piloto FROM pilotos WHERE id = ?");
+    $stmt_obm->bind_param("i", $_SESSION['user_id']);
+    $stmt_obm->execute();
+    $result_obm = $stmt_obm->get_result();
+    if ($result_obm->num_rows > 0) {
+        $obm_do_piloto = $result_obm->fetch_assoc()['obm_piloto'];
+    }
+    $stmt_obm->close();
     
-    $sql_aeronaves = "SELECT id, prefixo, modelo, crbm FROM aeronaves WHERE status = 'ativo' AND crbm = ? ORDER BY prefixo ASC";
+    // A consulta agora filtra por OBM, sendo mais restritiva e correta
+    $sql_aeronaves = "SELECT id, prefixo, modelo, crbm FROM aeronaves WHERE status = 'ativo' AND obm = ? ORDER BY prefixo ASC";
     $stmt_aeronaves = $conn->prepare($sql_aeronaves);
-    $stmt_aeronaves->bind_param("s", $crbm_do_piloto);
+    $stmt_aeronaves->bind_param("s", $obm_do_piloto);
     $stmt_aeronaves->execute();
     $result_aeronaves = $stmt_aeronaves->get_result();
-} else { 
+
+} elseif ($isAdmin && !$isSuperAdmin) {
+    // Para Admins, filtra pela sua força de segurança
+    $sql_aeronaves = "SELECT id, prefixo, modelo, crbm FROM aeronaves WHERE status = 'ativo' AND forca_seguranca = ? ORDER BY prefixo ASC";
+    $stmt_aeronaves = $conn->prepare($sql_aeronaves);
+    $stmt_aeronaves->bind_param("s", $user_forca_seguranca);
+    $stmt_aeronaves->execute();
+    $result_aeronaves = $stmt_aeronaves->get_result();
+
+} else { // Super Admin
+    // Super Admin vê todas as aeronaves ativas de todas as forças
     $sql_aeronaves = "SELECT id, prefixo, modelo, crbm FROM aeronaves WHERE status = 'ativo' ORDER BY prefixo ASC";
     $result_aeronaves = $conn->query($sql_aeronaves);
 }
+
 if ($result_aeronaves) {
     while($row = $result_aeronaves->fetch_assoc()) { $aeronaves_disponiveis[] = $row; }
+    if (isset($stmt_aeronaves)) { $stmt_aeronaves->close(); }
 }
+// ====================================================================================================
+// *** FIM DA SEÇÃO ALTERADA ***
+// ====================================================================================================
 
-// ====================================================================================================
-// *** INÍCIO DA SEÇÃO CORRIGIDA: Lógica de busca dos Tipos de Operação ***
-// A consulta foi reescrita para usar JOIN entre 'tipos_operacao' e 'operacao_forcas'
-// usando a chave estrangeira correta 'operacao_id'.
-// ====================================================================================================
+
+// Lógica de busca dos Tipos de Operação (sem alterações)
 if ($isSuperAdmin) {
-    // Super Admin vê todas as operações, com a força indicada para clareza.
     $sql_operacoes = "
         SELECT t.id, t.nome, o.forca_seguranca 
         FROM tipos_operacao t
@@ -45,7 +70,6 @@ if ($isSuperAdmin) {
     ";
     $result_operacoes = $conn->query($sql_operacoes);
 } else {
-    // Outros usuários (Admin/Piloto) veem operações da sua força ou as gerais (sem força associada).
     $sql_operacoes = "
         SELECT t.id, t.nome 
         FROM tipos_operacao t
@@ -73,15 +97,11 @@ if($result_operacoes) {
 if (isset($stmt_operacoes)) {
     $stmt_operacoes->close();
 }
-// ====================================================================================================
-// *** FIM DA SEÇÃO CORRIGIDA ***
-// ====================================================================================================
 
 
-// --- Lógica de submissão do formulário (sem alterações) ---
+// Lógica de submissão do formulário (sem alterações)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // Validações essenciais
     if (isset($_FILES['gpx_files']) && count(array_filter($_FILES['gpx_files']['name'])) > 0 && isset($_POST['pilotos']) && !empty(array_filter($_POST['pilotos']))) {
         
         $conn->begin_transaction();
@@ -253,7 +273,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <legend>2. Equipamentos e Pessoal</legend>
                  <div class="form-grid">
                     <div class="form-group">
-                        <label for="aeronave_id">Aeronave (HAWK):</label>
+                        <label for="aeronave_id">Aeronave <?php echo $aeronave_label_sufixo; ?>:</label>
                         <select id="aeronave_id" name="aeronave_id" required>
                             <option value="">Selecione a Aeronave</option>
                             <?php foreach ($aeronaves_disponiveis as $aeronave): ?>
@@ -305,7 +325,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script>
-// Bloco de JavaScript (sem alterações)
 function toggleOtherInput(selectElement, wrapperId) {
     const wrapper = document.getElementById(wrapperId);
     const otherInput = wrapper.querySelector('input');

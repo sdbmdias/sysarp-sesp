@@ -8,13 +8,27 @@ $aeronave_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $aeronave_details = null;
 $documentos_encontrados = [];
 
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ADICIONADA: Carregamento dinâmico das Forças de Segurança ***
+// ====================================================================================================
+$forcas_config = [];
+$config_file_path = __DIR__ . '/includes/config_forcas.json'; 
+if (file_exists($config_file_path)) {
+    $json_content = file_get_contents($config_file_path);
+    $forcas_config = json_decode($json_content, true);
+}
+// ====================================================================================================
+// *** FIM DA SEÇÃO ADICIONADA ***
+// ====================================================================================================
+
+
 if ($aeronave_id <= 0) {
     header("Location: checklist.php");
     exit();
 }
 
 // --- Busca os detalhes da aeronave ---
-$stmt_aeronave = $conn->prepare("SELECT prefixo, modelo, obm FROM aeronaves WHERE id = ?");
+$stmt_aeronave = $conn->prepare("SELECT prefixo, modelo, obm, forca_seguranca FROM aeronaves WHERE id = ?");
 $stmt_aeronave->bind_param("i", $aeronave_id);
 $stmt_aeronave->execute();
 $result_aeronave = $stmt_aeronave->get_result();
@@ -26,6 +40,7 @@ if ($result_aeronave->num_rows > 0) {
 }
 $stmt_aeronave->close();
 $modelo_aeronave_atual = $aeronave_details['modelo'];
+$forca_aeronave_atual = $aeronave_details['forca_seguranca'];
 
 // --- VERIFICAÇÃO DE PERMISSÃO PARA PILOTO ---
 if ($isPiloto) {
@@ -51,12 +66,16 @@ if ($isAdmin || $isSuperAdmin) {
         $nome_documento = htmlspecialchars(trim($_POST['nome_documento']));
         $associar_a = $_POST['associar_a'];
         
-        // *** NOVO: Captura a força de segurança do formulário ***
-        $forca_seguranca = (!empty($_POST['forca_seguranca'])) ? htmlspecialchars($_POST['forca_seguranca']) : null;
-        // Garante que um Admin não-SuperAdmin só possa cadastrar para sua própria força
-        if ($isAdmin && !$isSuperAdmin && $forca_seguranca !== $user_forca_seguranca) {
-            $mensagem_status = "<div class='error-message-box'>Erro: Permissão negada para associar a esta força de segurança.</div>";
-        } else if (empty($nome_documento) || !isset($_FILES['documento']) || $_FILES['documento']['error'] != UPLOAD_ERR_OK) {
+        $forca_seguranca_assoc = (!empty($_POST['forca_seguranca'])) ? htmlspecialchars($_POST['forca_seguranca']) : null;
+        
+        // Se for Admin, a força associada é obrigatoriamente a sua. Se for SuperAdmin e ele não escolheu uma, a força é a da aeronave.
+        if($isAdmin && !$isSuperAdmin) {
+            $forca_seguranca_assoc = $user_forca_seguranca;
+        } elseif ($isSuperAdmin && is_null($forca_seguranca_assoc)) {
+             $forca_seguranca_assoc = $forca_aeronave_atual;
+        }
+
+        if (empty($nome_documento) || !isset($_FILES['documento']) || $_FILES['documento']['error'] != UPLOAD_ERR_OK) {
             $mensagem_status = "<div class='error-message-box'>Erro: Nome do documento e arquivo são obrigatórios.</div>";
         } else {
             $target_dir = "uploads/";
@@ -76,25 +95,22 @@ if ($isAdmin || $isSuperAdmin) {
                     $sql_todos_modelos = "SELECT DISTINCT modelo FROM fabricantes_modelos WHERE tipo = 'Aeronave'";
                     $result_todos_modelos = $conn->query($sql_todos_modelos);
                     if ($result_todos_modelos && $result_todos_modelos->num_rows > 0) {
-                        // *** ATUALIZADO: Adiciona forca_seguranca ***
                         $stmt_assoc_all = $conn->prepare("INSERT INTO documentos_associados (documento_id, modelo_aeronave, forca_seguranca) VALUES (?, ?, ?)");
                         while ($row = $result_todos_modelos->fetch_assoc()) {
-                            $stmt_assoc_all->bind_param("iss", $novo_documento_id, $row['modelo'], $forca_seguranca);
+                            $stmt_assoc_all->bind_param("iss", $novo_documento_id, $row['modelo'], $forca_seguranca_assoc);
                             $stmt_assoc_all->execute();
                         }
                         $stmt_assoc_all->close();
                         $associacao_ok = true;
                     }
                 } elseif ($associar_a == 'modelo') {
-                    // *** ATUALIZADO: Adiciona forca_seguranca ***
                     $stmt_assoc = $conn->prepare("INSERT INTO documentos_associados (documento_id, modelo_aeronave, forca_seguranca) VALUES (?, ?, ?)");
-                    $stmt_assoc->bind_param("iss", $novo_documento_id, $modelo_aeronave_atual, $forca_seguranca);
+                    $stmt_assoc->bind_param("iss", $novo_documento_id, $modelo_aeronave_atual, $forca_seguranca_assoc);
                     if ($stmt_assoc->execute()) $associacao_ok = true;
                     $stmt_assoc->close();
-                } else {
-                    // *** ATUALIZADO: Adiciona forca_seguranca ***
+                } else { // 'aeronave'
                     $stmt_assoc = $conn->prepare("INSERT INTO documentos_associados (documento_id, aeronave_id, forca_seguranca) VALUES (?, ?, ?)");
-                    $stmt_assoc->bind_param("iis", $novo_documento_id, $aeronave_id, $forca_seguranca);
+                    $stmt_assoc->bind_param("iis", $novo_documento_id, $aeronave_id, $forca_seguranca_assoc);
                     if ($stmt_assoc->execute()) $associacao_ok = true;
                     $stmt_assoc->close();
                 }
@@ -115,7 +131,6 @@ if ($isAdmin || $isSuperAdmin) {
     }
     // Lógica para DESASSOCIAR um documento
     if (isset($_GET['disassociate_id'])) {
-        // A lógica de desassociar permanece a mesma, pois remove a associação inteira.
         $disassociate_doc_id = intval($_GET['disassociate_id']);
         $stmt_dis = $conn->prepare("DELETE FROM documentos_associados WHERE documento_id = ? AND (aeronave_id = ? OR modelo_aeronave = ?)");
         $stmt_dis->bind_param("iis", $disassociate_doc_id, $aeronave_id, $modelo_aeronave_atual);
@@ -131,18 +146,13 @@ if ($isAdmin || $isSuperAdmin) {
 // --- LÓGICA DE BUSCA DE DOCUMENTOS (ATUALIZADA COM FILTRO DE SEGURANÇA) ---
 $sql_documentos = "
     SELECT 
-        d.id, 
-        d.nome_exibicao, 
-        d.caminho_arquivo, 
-        d.nome_arquivo_servidor,
+        d.id, d.nome_exibicao, d.caminho_arquivo, d.nome_arquivo_servidor,
         MIN(CASE WHEN da.aeronave_id = ? THEN 'especifico' ELSE 'modelo' END) AS tipo_associacao,
         MIN(da.forca_seguranca) as forca_associada
     FROM documentos d
     JOIN documentos_associados da ON d.id = da.documento_id
-    WHERE 
-        (da.aeronave_id = ? OR da.modelo_aeronave = ?)";
+    WHERE (da.aeronave_id = ? OR da.modelo_aeronave = ?)";
 
-// *** NOVO: Adiciona filtro de segurança para não Super Admins ***
 $params = [$aeronave_id, $aeronave_id, $modelo_aeronave_atual];
 $types = "iis";
 
@@ -155,17 +165,14 @@ if (!$isSuperAdmin && !empty($user_forca_seguranca)) {
 $sql_documentos .= "
     GROUP BY d.id, d.nome_exibicao, d.caminho_arquivo, d.nome_arquivo_servidor
     ORDER BY d.nome_exibicao ASC";
-
 $stmt_documentos = $conn->prepare($sql_documentos);
 $stmt_documentos->bind_param($types, ...$params);
 $stmt_documentos->execute();
 $result_documentos = $stmt_documentos->get_result();
-
 while($row = $result_documentos->fetch_assoc()) {
     $documentos_encontrados[] = $row;
 }
 $stmt_documentos->close();
-
 ?>
 
 <div class="main-content">
@@ -189,17 +196,22 @@ $stmt_documentos->close();
                     <label for="documento">Arquivo (PDF, Excel, etc.):</label>
                     <input type="file" id="documento" name="documento" required>
                 </div>
-
                 <div class="form-group">
                     <?php if ($isSuperAdmin): ?>
                         <label for="forca_seguranca">Associar a uma Força Específica:</label>
+                        <?php // *** INÍCIO DA SEÇÃO ALTERADA: Select dinâmico *** ?>
                         <select id="forca_seguranca" name="forca_seguranca">
                             <option value="">Geral (Todas as Forças)</option>
-                            <option value="PMPR">PMPR</option>
-                            <option value="CBMPR">CBMPR</option>
-                            <option value="Polícia Penal">Polícia Penal</option>
+                            <?php if (!empty($forcas_config)): ?>
+                                <?php foreach ($forcas_config as $sigla => $config): ?>
+                                    <option value="<?php echo htmlspecialchars($sigla); ?>">
+                                        <?php echo htmlspecialchars($config['nome']); ?> (<?php echo htmlspecialchars($sigla); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                         <small>Super Admins podem associar a qualquer força ou deixar como geral.</small>
+                        <?php // *** FIM DA SEÇÃO ALTERADA *** ?>
                     <?php else: ?>
                         <label for="forca_seguranca">Força de Segurança Associada:</label>
                         <input type="text" id="forca_seguranca" name="forca_seguranca" value="<?php echo htmlspecialchars($user_forca_seguranca); ?>" readonly>

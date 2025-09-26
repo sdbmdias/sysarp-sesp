@@ -13,7 +13,6 @@ if (!$isSuperAdmin && !$isAdmin) {
 $mensagem_status = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Coleta dos dados do formulário
     $forca_seguranca = $_POST['forca_seguranca'];
     $posto_graduacao = $_POST['posto_graduacao'];
     $nome_completo = $_POST['nome_completo'];
@@ -28,12 +27,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $senha = $_POST['senha'];
     $nome_usuario = $_POST['nome_usuario'];
     
-    // Define o tipo de usuário com base na permissão do usuário logado
     $tipo_usuario_input = $_POST['tipo_usuario'];
     $tipo_usuario = ($isSuperAdmin) ? $tipo_usuario_input : 'piloto';
 
-    // Lógica para gerar o número de cadastro
-    $prefixo_codigo = $config_forcas[$forca_seguranca]['codigo_prefixo'] ?? 'OP'; //
+    $prefixo_codigo = $config_forcas[$forca_seguranca]['codigo_prefixo'] ?? 'OP';
     $stmt_op = $conn->prepare("SELECT MAX(CAST(SUBSTRING(codigo_cadastro, " . (strlen($prefixo_codigo) + 1) . ", 3) AS UNSIGNED)) AS max_num FROM pilotos WHERE forca_seguranca = ?");
     $stmt_op->bind_param("s", $forca_seguranca);
     $stmt_op->execute();
@@ -60,42 +57,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $stmt->close();
 }
+
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Iniciais Dinâmicos ***
+// ====================================================================================================
+$initial_posto_label = 'Posto/Graduação';
+$initial_crbm_label = 'Unidade Superior';
+$initial_obm_label = 'Subunidade';
+$initial_cparp_label = 'CPARP';
+
+if ($isAdmin && !$isSuperAdmin && isset($config_forcas[$user_forca_seguranca])) {
+    $config_admin = $config_forcas[$user_forca_seguranca];
+    $initial_posto_label = $config_admin['posto_graduacao_label'];
+    $initial_crbm_label = $config_admin['crbm_label'];
+    $initial_obm_label = $config_admin['obm_label'];
+    $initial_cparp_label = $config_admin['cparp_label'];
+}
+// ====================================================================================================
+// *** FIM DA SEÇÃO ALTERADA ***
+// ====================================================================================================
 ?>
 
 <style>
-    .form-grid-piloto {
-        display: grid;
-        grid-template-columns: 1fr 3fr;
-        gap: 20px;
-        align-items: flex-end;
-    }
-    @media (max-width: 768px) {
-        .form-grid-piloto {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* Estilos para garantir a consistência de todos os campos do formulário */
-    .form-group input[type="text"],
-    .form-group input[type="email"],
-    .form-group input[type="tel"],
-    .form-group input[type="password"],
-    .form-group select,
-    .form-group textarea {
-        width: 100%; /* Força todos os campos a ocupar a largura total do container */
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box; /* Garante que padding e borda não aumentem a largura total */
-    }
-
-    /* Validação do navegador */
-    input:invalid, select:invalid {
-        box-shadow: none; /* Remove o brilho padrão de erro */
-    }
-    input:user-invalid, select:user-invalid {
-        border-color: #dc3545; /* Aplica borda vermelha apenas após interação */
-    }
+    .form-grid-piloto { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; align-items: flex-end; }
+    @media (max-width: 768px) { .form-grid-piloto { grid-template-columns: 1fr; } }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    input:invalid, select:invalid { box-shadow: none; }
+    input:user-invalid, select:user-invalid { border-color: #dc3545; }
 </style>
 
 <div class="main-content">
@@ -126,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <div class="form-grid-piloto">
                 <div class="form-group">
-                    <label for="posto_graduacao" id="posto_graduacao_label">Posto/Graduação:</label>
+                    <label for="posto_graduacao" id="posto_graduacao_label"><?php echo htmlspecialchars($initial_posto_label); ?>:</label>
                     <select id="posto_graduacao" name="posto_graduacao" required disabled>
                         <option value="">Selecione a Força de Segurança primeiro...</option>
                     </select>
@@ -150,22 +138,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <input type="tel" id="telefone" name="telefone" placeholder="(XX) X XXXX-XXXX" pattern="\(\d{2}\) \d \d{4}-\d{4}" title="Formato: (XX) X XXXX-XXXX" required>
                 </div>
                 <div class="form-group">
-                    <label for="crbm_piloto" id="crbm_piloto_label">CRBM:</label>
+                    <label for="crbm_piloto" id="crbm_piloto_label"><?php echo htmlspecialchars($initial_crbm_label); ?>:</label>
                     <select id="crbm_piloto" name="crbm_piloto" required disabled>
                         <option value="">Selecione a Força de Segurança primeiro...</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="obm_piloto" id="obm_piloto_label">OBM/Seção:</label>
+                    <label for="obm_piloto" id="obm_piloto_label"><?php echo htmlspecialchars($initial_obm_label); ?>:</label>
                     <select id="obm_piloto" name="obm_piloto" required disabled>
-                        <option value="">Selecione a Força de Segurança e a Unidade de Origem primeiro...</option>
+                        <option value="">Selecione a Unidade de Origem primeiro...</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="cadastro_sarpas">Código SARPAS:</label> <input type="text" id="cadastro_sarpas" name="cadastro_sarpas" placeholder="Ex: AB2025123456" required>
                 </div>
                 <div class="form-group">
-                    <label for="cparp" id="cparp_label">CPARP:</label>
+                    <label for="cparp" id="cparp_label"><?php echo htmlspecialchars($initial_cparp_label); ?>:</label>
                     <select id="cparp" name="cparp" required>
                         <option value="">Selecione</option>
                         <option value="SIM">SIM</option>
@@ -181,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <select id="status_piloto" name="status_piloto" required>
                         <option value="ativo">Ativo</option>
                         <option value="afastado">Afastado</option>
-                        <option value="desativado">Desativado</option>
+                        <option value="desativado">Inativo</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -209,9 +197,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // PHP variables from the server-side
     const configForcas = <?php echo json_encode($config_forcas); ?>;
-
     const form = document.getElementById('pilotoForm');
     const saveButton = document.getElementById('saveButton');
     const requiredFields = Array.from(form.querySelectorAll('[required]'));
@@ -225,17 +211,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const obmSelect = document.getElementById('obm_piloto');
     const cparpSelect = document.getElementById('cparp');
     
-    // Function to format the CRBM/CRPM
     function formatCrbm(crbm) {
-        if (crbm.match(/^\d+CRBM$/i) || crbm.match(/^\d+CRPM$/i)) {
+        if (crbm && (crbm.match(/^\d+CRBM$/i) || crbm.match(/^\d+CRPM$/i))) {
             return crbm.replace(/(\d+)(CRBM|CRPM)/i, '$1º $2').toUpperCase();
         }
         return crbm;
     }
 
-    // Function to populate a select element
     function populateSelect(selectElement, optionsArray, placeholder, formatCallback = null) {
         selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+        if (!optionsArray) return;
         optionsArray.forEach(optionText => {
             const option = document.createElement('option');
             option.value = optionText;
@@ -248,74 +233,59 @@ document.addEventListener('DOMContentLoaded', function() {
         const forca = forcaSegurancaSelect.value;
         const config = configForcas[forca];
 
-        // Reset all selects and labels
-        postoGraduacaoSelect.innerHTML = '<option value="">Selecione a Força de Segurança primeiro...</option>';
+        postoGraduacaoSelect.innerHTML = '<option value="">Selecione a Força primeiro...</option>';
         postoGraduacaoSelect.disabled = true;
-        crbmSelect.innerHTML = '<option value="">Selecione a Força de Segurança primeiro...</option>';
+        crbmSelect.innerHTML = '<option value="">Selecione a Força primeiro...</option>';
         crbmSelect.disabled = true;
-        obmSelect.innerHTML = '<option value="">Selecione a Força de Segurança e a Unidade de Origem primeiro...</option>';
+        obmSelect.innerHTML = '<option value="">Selecione a Unidade Superior primeiro...</option>';
         obmSelect.disabled = true;
 
         if (config) {
-            // Update labels dynamically
-            postoGraduacaoLabel.textContent = config.posto_graduacao_label + ':'; //
-            crbmPilotoLabel.textContent = config.crbm_label + ':'; //
-            obmPilotoLabel.textContent = config.obm_label + ':'; //
-            cparpLabel.textContent = config.cparp_label + ':'; //
+            postoGraduacaoLabel.textContent = config.posto_graduacao_label + ':';
+            crbmPilotoLabel.textContent = config.crbm_label + ':';
+            obmPilotoLabel.textContent = config.obm_label + ':';
+            cparpLabel.textContent = config.cparp_label + ':';
 
-            // Populate Posto/Graduação
             if (config.postos_graduacoes) {
-                populateSelect(postoGraduacaoSelect, config.postos_graduacoes, 'Selecione...'); //
+                populateSelect(postoGraduacaoSelect, config.postos_graduacoes, 'Selecione...');
                 postoGraduacaoSelect.disabled = false;
             }
             
-            // Handle CRBM/OBM fields based on force configuration
-            if (config.unidades && !config.unidades.crpms) { // CBMPR, Polícia Penal, PCPR, Polícia Científica
+            crbmSelect.removeEventListener('change', handleDynamicUnitsChange);
+            crbmSelect.removeEventListener('change', handlePmUnitsChange);
+
+            if (config.unidades && !config.unidades.crpms) {
                 const crbms = Object.keys(config.unidades).sort();
-                populateSelect(crbmSelect, crbms, `Selecione a ${crbmPilotoLabel.textContent.replace(':', '')}`, forca === 'CBMPR' ? formatCrbm : null);
-                crbmSelect.disabled = false;
-                crbmSelect.removeEventListener('change', handleDynamicUnitsChange);
+                populateSelect(crbmSelect, crbms, `Selecione a ${config.crbm_label}`, forca === 'CBMPR' ? formatCrbm : null);
                 crbmSelect.addEventListener('change', handleDynamicUnitsChange);
-            } else if (config.unidades && config.unidades.crpms) { // PMPR Logic
-                populateSelect(crbmSelect, config.unidades.crpms, `Selecione o ${config.crbm_label}`); //
-                crbmSelect.disabled = false;
-                crbmSelect.removeEventListener('change', handleDynamicUnitsChange);
-                crbmSelect.addEventListener('change', () => {
-                    const crpm = crbmSelect.value;
-                    const opms = config.unidades.opms_por_crpm[crpm] || []; //
-                    populateSelect(obmSelect, opms, `Selecione a ${config.obm_label}`);
-                    obmSelect.disabled = opms.length === 0;
-                    checkFormValidity();
-                });
-            } else {
-                crbmSelect.disabled = true;
-                obmSelect.disabled = true;
-                crbmSelect.innerHTML = '<option value="">Nenhuma unidade disponível</option>';
-                obmSelect.innerHTML = '<option value="">Nenhuma unidade disponível</option>';
+            } else if (config.unidades && config.unidades.crpms) {
+                populateSelect(crbmSelect, config.unidades.crpms, `Selecione o ${config.crbm_label}`);
+                crbmSelect.addEventListener('change', handlePmUnitsChange);
             }
+            
+            crbmSelect.disabled = !(Object.keys(config.unidades || {}).length > 0);
         }
         checkFormValidity();
     }
     
     function handleDynamicUnitsChange() {
         const forca = forcaSegurancaSelect.value;
-        const crbm = this.value;
+        const crbm = this.value; 
         const config = configForcas[forca];
-        
-        obmSelect.innerHTML = '<option value="">Selecione a OBM/Seção</option>';
-        obmSelect.disabled = true;
-        
-        if (crbm && config.unidades[crbm]) {
-            obmSelect.disabled = false;
-            config.unidades[crbm].forEach(function(obm) {
-                const option = document.createElement('option');
-                option.value = obm;
-                option.textContent = obm;
-                obmSelect.appendChild(option);
-            });
-        }
+        populateSelect(obmSelect, config.unidades[crbm] || [], `Selecione a ${config.obm_label}`);
+        obmSelect.disabled = !(crbm && config.unidades[crbm]);
         checkFormValidity();
     }
+    
+    const handlePmUnitsChange = () => {
+        const forca = forcaSegurancaSelect.value;
+        const config = configForcas[forca];
+        const crpm = crbmSelect.value;
+        const opms = (config && config.unidades.opms_por_crpm[crpm]) || [];
+        populateSelect(obmSelect, opms, `Selecione a ${config.obm_label}`);
+        obmSelect.disabled = opms.length === 0;
+        checkFormValidity();
+    };
 
     function checkFormValidity() {
         const allValid = requiredFields.every(field => field.disabled || field.value.trim() !== '');
@@ -327,16 +297,11 @@ document.addEventListener('DOMContentLoaded', function() {
         field.addEventListener('change', checkFormValidity);
     });
 
-    // Anexa o evento de mudança para Super Admins que selecionam manualmente
     if (forcaSegurancaSelect) {
         forcaSegurancaSelect.addEventListener('change', handleForcaSegurancaChange);
     }
     
-    // Executa a função imediatamente ao carregar a página.
-    // Isso garante que, se uma Força de Segurança já estiver pré-selecionada (caso do Admin),
-    // os campos dependentes (Posto/Graduação, etc.) sejam populados corretamente.
     handleForcaSegurancaChange();
-    
     checkFormValidity();
 });
 </script>

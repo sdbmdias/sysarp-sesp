@@ -22,7 +22,6 @@ $isSuperAdmin = isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'supe
 $isAdmin = isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'administrador';
 $isPiloto = isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'piloto';
 
-// Define o nome de perfil para exibição, substituindo "super_administrador"
 $nome_perfil = '';
 if (isset($_SESSION['user_type'])) {
     if ($_SESSION['user_type'] == 'super_administrador') {
@@ -33,7 +32,6 @@ if (isset($_SESSION['user_type'])) {
 }
 $user_forca_seguranca = $_SESSION['forca_seguranca'] ?? '';
 
-// Adiciona a busca e armazenamento do CRBM do piloto para filtragem
 $logged_in_pilot_crbm = '';
 if ($isPiloto && isset($_SESSION['user_id'])) {
     $stmt_crbm = $conn->prepare("SELECT crbm_piloto FROM pilotos WHERE id = ?");
@@ -60,24 +58,40 @@ if ($isSuperAdmin || $isAdmin) {
     }
 }
 
-// Adiciona classes ao body para theming dinâmico
+
+// ====================================================================================================
+// *** INÍCIO DA SEÇÃO CORRIGIDA: Lógica de seleção de tema aprimorada ***
+// ====================================================================================================
 $body_class = '';
 if (!empty($user_forca_seguranca)) {
     switch ($user_forca_seguranca) {
         case 'PMPR':
             $body_class = 'theme-pmpr';
             break;
-        case 'CBMPR':
-            $body_class = 'theme-cbmpr';
-            break;
         case 'Polícia Penal':
             $body_class = 'theme-policia-penal';
             break;
+        case 'Defesa Civil Estadual':
+            $body_class = 'theme-defesa-civil-estadual';
+            break;
+        case 'PCPR':
+            $body_class = 'theme-pcpr';
+            break;
+        case 'Polícia Científica':
+            $body_class = 'theme-policia-cientifica';
+            break;
+        case 'CBMPR':
         default:
-            $body_class = '';
+            $body_class = 'theme-cbmpr'; // Define CBMPR como tema padrão
             break;
     }
+} else {
+    // Garante que o tema padrão seja aplicado se o usuário não tiver força definida
+    $body_class = 'theme-cbmpr';
 }
+// ====================================================================================================
+// *** FIM DA SEÇÃO CORRIGIDA ***
+// ====================================================================================================
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
