@@ -1,223 +1,167 @@
 <?php
-// 1. Incluir os arquivos necessários
-require_once 'includes/database.php';
+// 1. Incluir APENAS o inicializador PHP, sem HTML
+require_once 'includes/init.php';
 require_once 'libs/fpdf/fpdf.php';
 
-// 2. Lógica para buscar os dados das manutenções
+// 2. Bloco de Segurança
+if (!$isAdmin && !$isSuperAdmin) {
+    die('Acesso negado. Você não tem permissão para gerar este relatório.');
+}
+
+// 3. Lógica para buscar os dados das manutenções
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $historico_manutencoes = [];
+try {
+    $params = [];
+    $types = '';
+    $sql_historico = "SELECT 
+                        m.*, 
+                        a.prefixo AS aeronave_prefixo, a.modelo AS aeronave_modelo,
+                        c.numero_serie AS controle_sn, c.modelo AS controle_modelo,
+                        a_vinc.prefixo AS controle_vinculado_a
+                     FROM manutencoes m 
+                     LEFT JOIN aeronaves a ON m.equipamento_id = a.id AND m.equipamento_tipo = 'Aeronave'
+                     LEFT JOIN controles c ON m.equipamento_id = c.id AND m.equipamento_tipo = 'Controle'
+                     LEFT JOIN aeronaves a_vinc ON c.aeronave_id = a_vinc.id";
 
-$sql_historico = "SELECT 
-                m.*, /* Mantém m.* para compatibilidade, mas a coluna 'valor' não será exibida no PDF */
-                a.prefixo AS aeronave_prefixo, 
-                a.modelo AS aeronave_modelo,
-                c.numero_serie AS controle_sn,
-                c.modelo AS controle_modelo,
-                a_vinc.prefixo AS controle_vinculado_a
-             FROM manutencoes m 
-             LEFT JOIN aeronaves a ON m.equipamento_id = a.id AND m.equipamento_tipo = 'Aeronave'
-             LEFT JOIN controles c ON m.equipamento_id = c.id AND m.equipamento_tipo = 'Controle'
-             LEFT JOIN aeronaves a_vinc ON c.aeronave_id = a_vinc.id
-             ORDER BY m.data_manutencao DESC"; // Ordena pela data mais recente
-
-$result_historico = $conn->query($sql_historico);
-if ($result_historico) {
-    while ($row = $result_historico->fetch_assoc()) {
-        $historico_manutencoes[] = $row;
+    if ($isAdmin && !$isSuperAdmin && !empty($user_forca_seguranca)) {
+        $sql_historico .= "
+            JOIN (
+                SELECT a_filter.id FROM aeronaves a_filter
+                JOIN unidades u_filter ON a_filter.crbm = u_filter.nome_unidade
+                WHERE u_filter.forca_sigla = ?
+            ) AS aeronaves_da_forca ON a.id = aeronaves_da_forca.id OR a_vinc.id = aeronaves_da_forca.id
+        ";
+        $params[] = $user_forca_seguranca;
+        $types .= 's';
     }
-} else {
-    die("Erro ao buscar dados de manutenções: " . $conn->error);
+    $sql_historico .= " ORDER BY m.data_manutencao DESC";
+
+    $stmt = $conn->prepare($sql_historico);
+    if ($stmt) {
+        if (!empty($params)) $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $historico_manutencoes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+    }
+} catch (Exception $e) {
+    die("Erro ao buscar dados de manutenções: " . $e->getMessage());
 }
 $conn->close();
 
-// 3. Classe para criar o PDF
+// 4. Classe PDF com método para calcular altura da MultiCell
 class PDF extends FPDF
 {
-    // Cabeçalho
-    function Header()
-    {
+    function Header() {
         $this->SetFont('Arial','B',15);
         $this->Cell(0,10,utf8_decode('Relatório de Manutenções'),0,1,'C');
-        $this->Ln(10); // Pular linha
+        $this->Ln(10); 
     }
 
-    // Rodapé
-    function Footer()
-    {
-        $this->SetY(-15); // Posição a 1.5 cm do final
+    function Footer() {
+        $this->SetY(-15); 
         $this->SetFont('Arial','I',8);
         $this->Cell(0,10,utf8_decode('Página ').$this->PageNo().'/{nb}',0,0,'C');
     }
-    
-    // Método público para acessar a margem de quebra de página automática
-    function GetAutoPageBreakMargin()
-    {
-        return $this->bMargin;
-    }
 
-    // Método público para acessar a margem esquerda
-    function GetLeftMargin()
-    {
-        return $this->lMargin;
-    }
-
-    // Método público para acessar a margem direita
-    function GetRightMargin()
-    {
-        return $this->rMargin;
+    // Função para calcular o número de linhas de uma MultiCell
+    function NbLines($w, $txt) {
+        $cw = &$this->CurrentFont['cw'];
+        if($w == 0) $w = $this->w - $this->rMargin - $this->x;
+        $wmax = ($w - 2 * $this->cMargin) * 1000 / $this->FontSize;
+        $s = str_replace("\r", '', $txt);
+        $nb = strlen($s);
+        if($nb > 0 && $s[$nb-1] == "\n") $nb--;
+        $sep = -1; $i = 0; $j = 0; $l = 0; $nl = 1;
+        while($i < $nb) {
+            $c = $s[$i];
+            if($c == "\n") {
+                $i++; $sep = -1; $j = $i; $l = 0; $nl++;
+                continue;
+            }
+            if($c == ' ') $sep = $i;
+            $l += $cw[ord($c)];
+            if($l > $wmax) {
+                if($sep == -1) {
+                    if($i == $j) $i++;
+                } else $i = $sep + 1;
+                $sep = -1; $j = $i; $l = 0; $nl++;
+            } else $i++;
+        }
+        return $nl;
     }
 }
 
-// 4. Geração do PDF
-$pdf = new PDF('L'); // Layout Paisagem (Landscape)
-$pdf->AliasNbPages(); // Habilita a contagem total de páginas no rodapé
+// 5. Geração do PDF
+$pdf = new PDF('L', 'mm', 'A4');
+$pdf->AliasNbPages();
 $pdf->AddPage();
-$pdf->SetFont('Arial','B',8); // Reduzindo fonte para caber mais informação
+$pdf->SetFont('Arial','B',8);
 
-// Definição das larguras das colunas (Coluna 'Valor' removida)
-$w = [25, 60, 30, 45, 30, 60]; // 6 colunas, sem a de Valor
-
-// Cabeçalho da Tabela (Coluna 'Valor (R$)' removida)
+$w = [22, 75, 25, 45, 25, 85];
 $header = ['Data', 'Equipamento', 'Tipo', 'Responsável', 'Garantia até', 'Descrição'];
 for($i=0; $i<count($header); $i++) {
     $pdf->Cell($w[$i], 7, utf8_decode($header[$i]), 1, 0, 'C');
 }
 $pdf->Ln();
 
-// Dados da Tabela
-$pdf->SetFont('Arial','',7); // Fonte menor para os dados
+$pdf->SetFont('Arial','',7);
+$line_height_multicell = 4;
+
 if (!empty($historico_manutencoes)) {
     foreach($historico_manutencoes as $manutencao) {
-        $start_x_row = $pdf->GetX(); // Armazena a posição X inicial da linha
-        $start_y_row = $pdf->GetY(); // Armazena a posição Y inicial da linha
-        $line_height_multicell = 4; // Altura base da linha para MultiCell
-
         $equipamento_text = '';
         if ($manutencao['equipamento_tipo'] == 'Aeronave') {
             $equipamento_text = 'Aeronave: ' . ($manutencao['aeronave_prefixo'] ?? 'N/A') . ' - ' . ($manutencao['aeronave_modelo'] ?? 'N/A');
-        } else { // Controle
-            $vinculo = !empty($manutencao['controle_vinculado_a']) ? ' (Vinc. a ' . ($manutencao['controle_vinculado_a']) . ')' : ' (Reserva)';
-            $equipamento_text = 'Controle: S/N: ' . ($manutencao['controle_sn'] ?? 'N/A') . ' ' . $vinculo;
+        } else { 
+            $vinculo = !empty($manutencao['controle_vinculado_a']) ? ' (Vinc. a ' . $manutencao['controle_vinculado_a'] . ')' : ' (Reserva)';
+            $equipamento_text = 'Controle: S/N ' . ($manutencao['controle_sn'] ?? 'N/A') . $vinculo;
         }
+        $descricao_text = utf8_decode($manutencao['descricao'] ?? '');
+        $equipamento_text = utf8_decode($equipamento_text);
 
-        $descricao_text = $manutencao['descricao'] ?? '';
-        
-        // Calcular altura real necessária para as MultiCells para determinar a altura da linha da tabela
-        // Salva as margens originais para o cálculo
-        $original_l_margin_calc = $pdf->GetLeftMargin();
-        $original_r_margin_calc = $pdf->GetRightMargin();
+        // Calcula a altura da linha
+        $nb_equip = $pdf->NbLines($w[1], $equipamento_text);
+        $nb_desc = $pdf->NbLines($w[5], $descricao_text);
+        $row_height = max($nb_equip, $nb_desc) * $line_height_multicell;
+        if($row_height < 6) $row_height = 6; // Altura mínima
 
-        $temp_x_calc = $pdf->GetX(); 
-        $temp_y_calc = $pdf->GetY(); 
-
-        // Calcular altura do Equipamento MultiCell
-        $pdf->SetLeftMargin($temp_x_calc + $w[0]); 
-        $pdf->SetRightMargin($pdf->GetPageWidth() - ($temp_x_calc + $w[0] + $w[1])); 
-        $pdf->MultiCell($w[1], $line_height_multicell, utf8_decode($equipamento_text), 0, 'C', false);
-        $h1 = $pdf->GetY() - $temp_y_calc;
-        $pdf->SetXY($temp_x_calc, $temp_y_calc); // Restaura X e Y após cálculo
-        $pdf->SetLeftMargin($original_l_margin_calc); 
-        $pdf->SetRightMargin($original_r_margin_calc); 
-
-        // Calcular altura da Descrição MultiCell
-        $pdf->SetLeftMargin($temp_x_calc + array_sum(array_slice($w, 0, 5))); // Soma larguras das colunas antes da descrição
-        $pdf->SetRightMargin($pdf->GetPageWidth() - ($temp_x_calc + array_sum(array_slice($w, 0, 5)) + $w[5]));
-        $pdf->MultiCell($w[5], $line_height_multicell, utf8_decode($descricao_text), 0, 'C', false);
-        $h2 = $pdf->GetY() - $temp_y_calc;
-        $pdf->SetXY($temp_x_calc, $temp_y_calc); // Restaura X e Y após cálculo
-        $pdf->SetLeftMargin($original_l_margin_calc);
-        $pdf->SetRightMargin($original_r_margin_calc);
-
-        $row_height = max($h1, $h2, 6); 
-
-        // Adicionar uma nova página se a linha atual exceder o limite
-        if($pdf->GetY() + $row_height > ($pdf->GetPageHeight() - $pdf->GetAutoPageBreakMargin())) { 
+        // Verifica quebra de página
+        if($pdf->GetY() + $row_height > $pdf->GetPageHeight() - $pdf->bMargin) {
             $pdf->AddPage();
             $pdf->SetFont('Arial','B',8); 
             for($i=0; $i<count($header); $i++) {
                 $pdf->Cell($w[$i], 7, utf8_decode($header[$i]), 1, 0, 'C');
             }
             $pdf->Ln();
-            $pdf->SetFont('Arial','',7); 
-            $start_x_row = $pdf->GetX(); 
-            $start_y_row = $pdf->GetY();
+            $pdf->SetFont('Arial','',7);
         }
-
-        // Salvar as margens do documento no início da linha para restaurar no final
-        $doc_original_l_margin = $pdf->GetLeftMargin();
-        $doc_original_r_margin = $pdf->GetRightMargin();
         
-        // --- Desenhar Bordas da Linha Completa ---
-        // Desenha a borda inferior para a linha inteira da tabela
-        $pdf->Cell(array_sum($w), $row_height, '', 'B', 0, 'C'); 
-        $pdf->SetXY($start_x_row, $start_y_row); // Volta o cursor para o início da linha
-
-        // Desenha as bordas verticais para cada célula
-        $current_cell_x_border = $start_x_row;
-        foreach ($w as $col_width_border) {
-            $pdf->Cell($col_width_border, $row_height, '', 'LR', 0, 'C'); 
-            $current_cell_x_border += $col_width_border;
-        }
-        $pdf->SetXY($start_x_row, $start_y_row); // Volta o cursor para o início da linha para desenhar o conteúdo
-
-
-        // --- Desenhar Conteúdo das Células (sem bordas) ---
-        // Célula 1: Data
-        $pdf->Cell($w[0], $row_height, date("d/m/Y", strtotime($manutencao['data_manutencao'])), 0, 0, 'C');
+        // =================================================================
+        // LÓGICA DE DESENHO SIMPLIFICADA E CORRIGIDA
+        // =================================================================
+        $startX = $pdf->GetX();
+        $startY = $pdf->GetY();
         
-        // Célula 2: Equipamento (MultiCell)
-        $x_equipamento_content = $start_x_row + $w[0];
-        $y_equipamento_content = $start_y_row;
-        $pdf->SetXY($x_equipamento_content, $y_equipamento_content); 
-        $current_l_margin_temp = $pdf->GetLeftMargin();
-        $current_r_margin_temp = $pdf->GetRightMargin();
-        $pdf->SetLeftMargin($x_equipamento_content);
-        $pdf->SetRightMargin($pdf->GetPageWidth() - ($x_equipamento_content + $w[1]));
-        $pdf->MultiCell($w[1], $line_height_multicell, utf8_decode($equipamento_text), 0, 'C', false); // Alinhado ao centro
-        $pdf->SetLeftMargin($current_l_margin_temp);
-        $pdf->SetRightMargin($current_r_margin_temp);
-        $pdf->SetY($y_equipamento_content); 
-        $pdf->SetX($x_equipamento_content + $w[1]); 
+        $pdf->Cell($w[0], $row_height, date("d/m/Y", strtotime($manutencao['data_manutencao'])), 1, 0, 'C');
         
-        // Célula 3: Tipo
-        $pdf->Cell($w[2], $row_height, utf8_decode($manutencao['tipo_manutencao']), 0, 0, 'C');
-
-        // Célula 4: Responsável
-        $pdf->Cell($w[3], $row_height, utf8_decode($manutencao['responsavel']), 0, 0, 'C');
-
-        // Célula 5: Garantia até
+        $pdf->MultiCell($w[1], $line_height_multicell, $equipamento_text, 1, 'C');
+        $pdf->SetXY($startX + $w[0] + $w[1], $startY); // Reposiciona para a próxima célula
+        
+        $pdf->Cell($w[2], $row_height, utf8_decode($manutencao['tipo_manutencao']), 1, 0, 'C');
+        $pdf->Cell($w[3], $row_height, utf8_decode($manutencao['responsavel']), 1, 0, 'C');
+        
         $garantia = !empty($manutencao['garantia_ate']) ? date("d/m/Y", strtotime($manutencao['garantia_ate'])) : 'N/A';
-        $pdf->Cell($w[4], $row_height, utf8_decode($garantia), 0, 0, 'C');
-
-        // Célula 6: Descrição (MultiCell)
-        $x_descricao_content = $start_x_row + $w[0] + $w[1] + $w[2] + $w[3] + $w[4];
-        $y_descricao_content = $start_y_row;
-        $pdf->SetXY($x_descricao_content, $y_descricao_content); 
-        $current_l_margin_temp = $pdf->GetLeftMargin();
-        $current_r_margin_temp = $pdf->GetRightMargin();
-        $pdf->SetLeftMargin($x_descricao_content);
-        $pdf->SetRightMargin($pdf->GetPageWidth() - ($x_descricao_content + $w[5]));
-        $pdf->MultiCell($w[5], $line_height_multicell, utf8_decode($descricao_text), 0, 'C', false); // Alinhado ao centro
-        $pdf->SetLeftMargin($current_l_margin_temp);
-        $pdf->SetRightMargin($current_r_margin_temp);
-        $pdf->SetY($y_descricao_content); 
-        $pdf->SetX($x_descricao_content + $w[5]); 
-
-        // Restaurar margens originais do documento após desenhar o conteúdo da linha
-        $pdf->SetLeftMargin($doc_original_l_margin);
-        $pdf->SetRightMargin($doc_original_r_margin);
-
-        // Move para a próxima linha, com base na altura calculada da linha atual
-        $pdf->SetY($start_y_row + $row_height);
-        $pdf->SetX($pdf->GetLeftMargin()); // Garante que a próxima linha comece na margem esquerda
+        $pdf->Cell($w[4], $row_height, utf8_decode($garantia), 1, 0, 'C');
+        
+        $currentX = $pdf->GetX(); // Guarda a posição X antes da última MultiCell
+        $pdf->MultiCell($w[5], $line_height_multicell, $descricao_text, 1, 'C');
+        
+        $pdf->SetY($startY + $row_height); // Move para a linha de baixo
     }
 } else {
-    // Colspan ajustado para o número de colunas (6)
     $pdf->Cell(array_sum($w), 10, utf8_decode('Nenhum registro de manutenção encontrado'), 1, 1, 'C');
 }
 
-// Linha de fechamento da tabela (apenas a borda inferior)
-$pdf->Cell(array_sum($w),0,'','T');
-
-// 5. Saída do PDF
 $pdf->Output('I', 'Relatorio_Manutencoes_SOARP.pdf');
 ?>

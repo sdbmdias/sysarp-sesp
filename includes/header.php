@@ -1,33 +1,21 @@
 <?php
-// Inicia a sessão em todas as páginas
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// 1. INCLUI A CONEXÃO COM O BANCO DE DADOS
-require_once 'database.php';
+// 1. INCLUI O INICIALIZADOR ESSENCIAL (SESSÃO, BANCO, PERFIS)
+require_once 'init.php';
 
 // ====================================================================================================
 // *** INÍCIO DA SEÇÃO CRÍTICA: Lógica de Carregamento Híbrido ***
 // ====================================================================================================
 
-/**
- * Carrega a configuração base do arquivo JSON e sobrepõe as unidades com os dados do banco.
- * @param mysqli $conn A conexão com o banco de dados.
- * @return array A configuração completa e mesclada.
- */
 function carregar_config_hibrida($conn) {
-    // 1. Carrega a configuração base (rótulos, postos, etc.) do arquivo JSON
     $config_base = [];
     $json_file = __DIR__ . '/config_forcas.json';
     if (file_exists($json_file)) {
         $config_base = json_decode(file_get_contents($json_file), true);
     }
     if (empty($config_base)) {
-        return []; // Retorna vazio se o JSON não puder ser lido
+        return [];
     }
 
-    // 2. Busca todas as unidades do banco de dados
     $unidades_db_result = $conn->query("
         SELECT forca_sigla, id, unidade_pai_id, nome_unidade 
         FROM unidades 
@@ -35,9 +23,8 @@ function carregar_config_hibrida($conn) {
     ");
     $unidades_db = $unidades_db_result ? $unidades_db_result->fetch_all(MYSQLI_ASSOC) : [];
 
-    // 3. Limpa as unidades estáticas do JSON e reconstrói com os dados do banco
     foreach ($config_base as $sigla => &$forca_config) {
-        $forca_config['unidades'] = []; // Limpa as unidades do JSON
+        $forca_config['unidades'] = [];
 
         $unidades_da_forca = array_filter($unidades_db, function($u) use ($sigla) {
             return $u['forca_sigla'] === $sigla;
@@ -53,7 +40,6 @@ function carregar_config_hibrida($conn) {
             }
         }
 
-        // Reconstrói a estrutura de unidades, incluindo o caso especial da PMPR
         if ($sigla == 'PMPR') {
             $forca_config['unidades']['crpms'] = array_values($unidades_pai);
             foreach ($unidades_pai as $id_pai => $nome_pai) {
@@ -69,14 +55,11 @@ function carregar_config_hibrida($conn) {
     return $config_base;
 }
 
-// CHAMA A FUNÇÃO E CRIA A VARIÁVEL GLOBAL DE CONFIGURAÇÃO
 $config_forcas = carregar_config_hibrida($conn);
 // ====================================================================================================
 // *** FIM DA SEÇÃO CRÍTICA ***
 // ====================================================================================================
 
-
-// 2. BLOCO DE SEGURANÇA E AUTENTICAÇÃO
 if (isset($_SESSION['force_password_reset']) && basename($_SERVER['PHP_SELF']) != 'primeiro_acesso.php') {
     header('Location: primeiro_acesso.php');
     exit();
@@ -88,11 +71,6 @@ if (!isset($_SESSION['user_id']) && !in_array(basename($_SERVER['PHP_SELF']), $p
     exit();
 }
 
-// 3. DEFINIÇÃO DE PERFIS DE USUÁRIO
-$isSuperAdmin = isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'super_administrador';
-$isAdmin = isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'administrador';
-$isPiloto = isset($_SESSION['user_type']) && $_SESSION['user_type'] == 'piloto';
-
 $nome_perfil = '';
 if (isset($_SESSION['user_type'])) {
     if ($_SESSION['user_type'] == 'super_administrador') {
@@ -101,7 +79,6 @@ if (isset($_SESSION['user_type'])) {
         $nome_perfil = ucfirst(str_replace('_', ' ', $_SESSION['user_type']));
     }
 }
-$user_forca_seguranca = $_SESSION['forca_seguranca'] ?? '';
 
 $logged_in_pilot_crbm = '';
 if ($isPiloto && isset($_SESSION['user_id'])) {
@@ -115,8 +92,6 @@ if ($isPiloto && isset($_SESSION['user_id'])) {
     $stmt_crbm->close();
 }
 
-
-// 4. LÓGICA DE VERIFICAÇÃO DE ALERTA (MANUTENÇÃO SISANT)
 $existem_alertas = false;
 if ($isSuperAdmin || $isAdmin) {
     $sql_alerts = "SELECT COUNT(id) AS total_alertas FROM aeronaves WHERE validade_sisant <= DATE_ADD(CURDATE(), INTERVAL 15 DAY)";
@@ -129,29 +104,15 @@ if ($isSuperAdmin || $isAdmin) {
     }
 }
 
-// Adiciona classes ao body para theming dinâmico (lógica mantida)
 $body_class = '';
 if (!empty($user_forca_seguranca)) {
     switch ($user_forca_seguranca) {
-        case 'PMPR':
-            $body_class = 'theme-pmpr';
-            break;
-        case 'Polícia Penal':
-            $body_class = 'theme-policia-penal';
-            break;
-        case 'Defesa Civil Estadual':
-            $body_class = 'theme-defesa-civil-estadual';
-            break;
-        case 'PCPR':
-            $body_class = 'theme-pcpr';
-            break;
-        case 'Polícia Científica':
-            $body_class = 'theme-policia-cientifica';
-            break;
-        case 'CBMPR':
-        default:
-            $body_class = 'theme-cbmpr';
-            break;
+        case 'PMPR': $body_class = 'theme-pmpr'; break;
+        case 'Polícia Penal': $body_class = 'theme-policia-penal'; break;
+        case 'Defesa Civil Estadual': $body_class = 'theme-defesa-civil-estadual'; break;
+        case 'PCPR': $body_class = 'theme-pcpr'; break;
+        case 'Polícia Científica': $body_class = 'theme-policia-cientifica'; break;
+        case 'CBMPR': default: $body_class = 'theme-cbmpr'; break;
     }
 } else {
     $body_class = 'theme-cbmpr';
@@ -165,7 +126,8 @@ if (!empty($user_forca_seguranca)) {
     <title>SOARP - CBMPR</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="assets/css/main.css">
-    </head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
 <body class="<?php echo $body_class; ?>">
     <div class="mobile-header no-print">
         <i class="fas fa-bars menu-toggle"></i>
@@ -184,6 +146,7 @@ if (!empty($user_forca_seguranca)) {
             <li><a href="checklist.php"><i class="fas fa-check-square"></i> Checklist/Documentos</a></li>
             <li><a href="listar_missoes.php"><i class="fas fa-map-marked-alt"></i> Missões</a></li>
             <li><a href="relprev.php"><i class="fas fa-shield-alt"></i> RELPREV</a></li>
+            <li><a href="relatorios.php"><i class="fas fa-file-pdf"></i> Relatórios</a></li>
 
             <?php if ($isSuperAdmin || $isAdmin): ?>
             <li class="has-submenu" id="admin-menu">
