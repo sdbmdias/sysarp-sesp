@@ -18,7 +18,7 @@ if (empty($crbm)) {
 }
 
 $pilotos = [];
-// CORREÇÃO: Usa a ordenação hierárquica correta, igual à usada em outras listagens de pilotos.
+// Usa a ordenação hierárquica correta, igual à usada em outras listagens de pilotos.
 $sql = "SELECT id, nome_completo, posto_graduacao 
         FROM pilotos 
         WHERE status_piloto = 'ativo' AND crbm_piloto = ? 

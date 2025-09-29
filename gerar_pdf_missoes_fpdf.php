@@ -62,7 +62,7 @@ if ($stmt) {
 $conn->close();
 
 
-// Função auxiliar para formatar tempo de voo (mantida)
+// Função auxiliar para formatar tempo de voo
 function formatarTempoVooPDF($segundos) {
     if ($segundos <= 0) return '0min';
     $horas = floor($segundos / 3600);
@@ -73,7 +73,7 @@ function formatarTempoVooPDF($segundos) {
     return trim($resultado) ?: '0min';
 }
 
-// Classe para criar o PDF (mantida)
+// Classe para criar o PDF
 class PDF extends FPDF
 {
     function Header()
@@ -95,7 +95,7 @@ class PDF extends FPDF
     function GetRightMargin() { return $this->rMargin; }
 }
 
-// Geração do PDF (lógica de renderização mantida)
+// Geração do PDF
 $pdf = new PDF('L'); 
 $pdf->AliasNbPages(); 
 $pdf->AddPage();

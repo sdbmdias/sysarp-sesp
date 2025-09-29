@@ -52,13 +52,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'seu_email@gmail.com'; // Substituir pelo seu e-mail
-                $mail->Password   = 'sua_senha_de_app'; // Substituir pela sua senha de app
+                $mail->Username   = 'email@gmail.com'; // Substituir pelo e-mail futuramente
+                $mail->Password   = 'senha_de_app'; // Substituir pela senha de app futuramente
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port       = 587;
 
                 // Destinatários
-                $mail->setFrom('seu_email@gmail.com', 'Sistema de Aeronaves Remotamente Pilotadas');
+                $mail->setFrom('email@gmail.com', 'Sistema de Aeronaves Remotamente Pilotadas');
                 $mail->addAddress($email, $nome_completo);
 
                 // Conteúdo do e-mail

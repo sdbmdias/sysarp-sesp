@@ -163,7 +163,7 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
     <?php if ($isSuperAdmin): ?>
         <?php if (!empty($aeronaves_agrupadas_fs)): ?>
             <?php foreach ($aeronaves_agrupadas_fs as $forca_seguranca => $aeronaves): 
-                // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos ***
+                // *** Busca rótulos dinâmicos ***
                 $config_atual = $forcas_config[$forca_seguranca] ?? null;
                 $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
                 $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
@@ -191,7 +191,7 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
                                     <td><?php echo htmlspecialchars($aeronave['numero_serie'] ?? 'N/A'); ?></td>
                                     <td>
                                         <?php 
-                                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                            // *** Formatação dinâmica ***
                                             $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $aeronave['crbm'] ?? 'N/A');
                                             echo htmlspecialchars($crbm_formatado . ' / ' . ($aeronave['obm'] ?? 'N/A'));
                                         ?>
@@ -225,7 +225,7 @@ function get_sort_link_aeronave($column, $current_column, $current_dir) {
                 <div class="table-container" style="margin-top: 30px;">
                     <h2> 
                         <?php 
-                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                            // *** Formatação dinâmica ***
                             $crbm_obm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $crbm_obm);
                             echo htmlspecialchars($crbm_obm_formatado);
                         ?>

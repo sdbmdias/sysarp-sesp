@@ -9,7 +9,7 @@ if (empty($token)) {
     $message = "Token de redefinição não fornecido. Por favor, use o link enviado para o seu e-mail.";
     $message_type = "error";
 } else {
-    // Configurações do banco de dados (ajustado para o banco de dados principal do SOARP)
+    // Configurações do banco de dados (ajustado para o banco de dados principal)
     $servername = "localhost";
     $username = "flyltm00_soarp";
     $password = "$1JKLjkl1$123";

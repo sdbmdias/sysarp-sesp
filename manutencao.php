@@ -3,7 +3,7 @@
 require_once 'includes/header.php';
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ADICIONADA: Busca o status do piloto logado ***
+// *** Busca o status do piloto logado ***
 // ====================================================================================================
 $logged_in_pilot_status = '';
 if ($isPiloto && isset($_SESSION['user_id'])) {
@@ -19,7 +19,7 @@ if ($isPiloto && isset($_SESSION['user_id'])) {
     }
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ADICIONADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 
 
@@ -128,7 +128,7 @@ function get_sort_link_manutencao($column, $current_column, $current_order) {
 <div class="main-content">
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
         <h1>Histórico de Manutenções</h1>
-        <?php // *** ALTERAÇÃO APLICADA AQUI *** ?>
+        <?php ?>
         <?php if ( ($isSuperAdmin || $isAdmin) || ($isPiloto && $logged_in_pilot_status === 'ativo') ): ?>
         <a href="cadastro_manutencao.php" class="form-actions button" style="text-decoration: none; display: inline-block; padding: 10px 20px; background-color:#28a745; color:#fff;">
             <i class="fas fa-plus"></i> Registrar Nova Manutenção

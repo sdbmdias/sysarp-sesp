@@ -151,12 +151,12 @@ function get_sort_link_piloto($column, $current_column, $current_dir) {
                     <thead>
                         <tr>
                             <?php
-                                // *** INÍCIO DA SEÇÃO ALTERADA: Rótulos dinâmicos ***
+                                // *** Rótulos dinâmicos ***
                                 $config_atual = $forcas_config[$forca_seguranca] ?? null;
                                 $posto_label = $config_atual['posto_graduacao_label'] ?? 'Posto/Graduação';
                                 $crbm_label = $config_atual['crbm_label'] ?? 'Unidade Superior';
                                 $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
-                                // *** FIM DA SEÇÃO ALTERADA ***
+                                // *** FIM DA SEÇÃO ***
                             ?>
                             <th>
                                 <a href="<?php echo get_sort_link_piloto('posto_graduacao', $sort_by, $sort_dir); ?>">
@@ -220,7 +220,7 @@ function get_sort_link_piloto($column, $current_column, $current_dir) {
                                 <td>
                                     <?php 
                                         $crbm_piloto_formatado = $piloto['crbm_piloto'] ?? 'N/A';
-                                        // *** ALTERAÇÃO APLICADA AQUI: Formatação para CRBM e CRPM ***
+                                        // *** Formatação para CRBM e CRPM ***
                                         $crbm_piloto_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $crbm_piloto_formatado);
                                         echo htmlspecialchars($crbm_piloto_formatado);
                                     ?>

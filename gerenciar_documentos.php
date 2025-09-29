@@ -13,7 +13,7 @@ $mensagem_status = "";
 $search_term = isset($_GET['q']) ? trim($_GET['q']) : '';
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ALTERADA: Lógica de exclusão com verificação de permissão ***
+// *** INÍCIO DA SEÇÃO: Lógica de exclusão com verificação de permissão ***
 // ====================================================================================================
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
@@ -23,7 +23,7 @@ if (isset($_GET['delete_id'])) {
         $can_delete = true;
     } elseif ($isAdmin) {
         // Admin só pode excluir documentos de aeronaves da sua força.
-        // Primeiro, verificamos se o documento está associado a alguma aeronave.
+        // Primeiro, verifica se o documento está associado a alguma aeronave.
         $stmt_check = $conn->prepare(
             "SELECT a.forca_seguranca 
              FROM documentos_associados da
@@ -35,7 +35,7 @@ if (isset($_GET['delete_id'])) {
         $result_check = $stmt_check->get_result();
         
         if ($result_check->num_rows > 0) {
-            // O documento está associado a aeronaves. Verificamos se alguma é da força do admin.
+            // O documento está associado a aeronaves. Verifica se alguma é da força do admin.
             while ($row = $result_check->fetch_assoc()) {
                 if ($row['forca_seguranca'] === $user_forca_seguranca) {
                     $can_delete = true;
@@ -89,13 +89,13 @@ if (isset($_GET['delete_id'])) {
     }
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ALTERADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 
 
 // Busca todos os documentos, incluindo informações para verificação de permissão
 $todos_documentos = [];
-// *** ALTERAÇÃO APLICADA AQUI: Adicionado GROUP_CONCAT para forca_seguranca ***
+// *** Adicionado GROUP_CONCAT para forca_seguranca ***
 $sql_docs = "SELECT 
                 d.id, d.nome_exibicao, d.caminho_arquivo, d.tipo_arquivo, d.data_upload, d.nome_arquivo_servidor,
                 GROUP_CONCAT(DISTINCT ac.prefixo SEPARATOR ', ') AS aeronaves_associadas,
@@ -189,7 +189,7 @@ foreach ($todos_documentos as $doc) {
                             <td><?php echo htmlspecialchars($doc['nome_exibicao']); ?></td>
                             <td class="action-buttons">
                                 <a href="<?php echo htmlspecialchars($doc['caminho_arquivo']); ?>" class="action-btn" style="background-color: #007bff;" download><i class="fas fa-download"></i> Baixar</a>
-                                <?php if ($isSuperAdmin): // *** ALTERAÇÃO APLICADA AQUI: Apenas Super Admin pode excluir *** ?>
+                                <?php if ($isSuperAdmin): ?>
                                 <a href="gerenciar_documentos.php?delete_id=<?php echo $doc['id']; ?>" class="action-btn" style="background-color:#dc3545;" onclick="return confirm('ATENÇÃO: Ação irreversível! Deseja excluir permanentemente este documento e todas as suas associações?');"><i class="fas fa-trash-alt"></i> Excluir</a>
                                 <?php endif; ?>
                             </td>
@@ -220,7 +220,7 @@ foreach ($todos_documentos as $doc) {
                             <td><?php echo htmlspecialchars(str_replace('||', ', ', $doc['modelos_associados'])); ?></td>
                             <td class="action-buttons">
                                 <a href="<?php echo htmlspecialchars($doc['caminho_arquivo']); ?>" class="action-btn" style="background-color: #007bff;" download><i class="fas fa-download"></i> Baixar</a>
-                                <?php if ($isSuperAdmin): // *** ALTERAÇÃO APLICADA AQUI: Apenas Super Admin pode excluir *** ?>
+                                <?php if ($isSuperAdmin): ?>
                                 <a href="gerenciar_documentos.php?delete_id=<?php echo $doc['id']; ?>" class="action-btn" style="background-color:#dc3545;" onclick="return confirm('ATENÇÃO: Ação irreversível! Deseja excluir permanentemente este documento e todas as suas associações?');"><i class="fas fa-trash-alt"></i> Excluir</a>
                                 <?php endif; ?>
                             </td>
@@ -252,7 +252,7 @@ foreach ($todos_documentos as $doc) {
                             <td class="action-buttons">
                                 <a href="<?php echo htmlspecialchars($doc['caminho_arquivo']); ?>" class="action-btn" style="background-color: #007bff;" download><i class="fas fa-download"></i> Baixar</a>
                                 <?php 
-                                // *** ALTERAÇÃO APLICADA AQUI: Lógica para exibir botão de exclusão ***
+                                // *** Lógica para exibir botão de exclusão ***
                                 $can_delete = false;
                                 if ($isSuperAdmin) {
                                     $can_delete = true;

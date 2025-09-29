@@ -170,7 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             outline: none;
             border-color: var(--color-primary);
         }
-        Isso já está no main.css de forma global
+        Está no main.css de forma global
         */
 
         .btn-login {
@@ -181,7 +181,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .btn-login:hover {
             background-color: var(--color-primary-hover);
         }
-        Isso já está no main.css de forma global
+        Está no main.css de forma global
         */
         
         .forgot-password-link {
@@ -194,7 +194,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .forgot-password-link:hover {
             text-decoration: underline;
         }
-        Isso já está no main.css de forma global
+        Está no main.css de forma global
         */
 
         .error-message {

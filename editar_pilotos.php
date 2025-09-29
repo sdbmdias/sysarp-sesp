@@ -88,7 +88,7 @@ if ($piloto_id) {
 }
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Iniciais Dinâmicos ***
+// *** INÍCIO DA SEÇÃO: Definição de Rótulos Iniciais Dinâmicos ***
 // ====================================================================================================
 $initial_posto_label = 'Posto/Graduação';
 $initial_crbm_label = 'Unidade Superior';
@@ -103,7 +103,7 @@ if (isset($piloto_data['forca_seguranca']) && isset($config_forcas[$piloto_data[
     $initial_cparp_label = $config_piloto['cparp_label'];
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ALTERADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 ?>
 

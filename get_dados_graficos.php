@@ -21,8 +21,7 @@ try {
     $types = '';
 
     // =================================================================
-    // ALTERAÇÃO APLICADA AQUI
-    // Agora, o filtro se aplica se o usuário for Admin OU Piloto, mas não SuperAdmin.
+    // Filtro se aplica se o usuário for Admin OU Piloto, mas não SuperAdmin.
     // =================================================================
     if (($isAdmin || $isPiloto) && !$isSuperAdmin && !empty($user_forca_seguranca)) {
         $where_clause = "

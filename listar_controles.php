@@ -120,7 +120,7 @@ if (isset($result_controles) && $result_controles->num_rows > 0) {
     <?php if ($isSuperAdmin): ?>
         <?php if (!empty($controles_agrupados_fs)): ?>
             <?php foreach ($controles_agrupados_fs as $forca_seguranca => $controles): 
-                // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos ***
+                // *** Busca rótulos dinâmicos ***
                 $config_atual = $forcas_config[$forca_seguranca] ?? null;
                 $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
                 $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
@@ -149,7 +149,7 @@ if (isset($result_controles) && $result_controles->num_rows > 0) {
                                     <td><?php echo htmlspecialchars($controle['prefixo_aeronave'] ?? 'Nenhum (Reserva)'); ?></td>
                                     <td>
                                         <?php 
-                                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                            // *** Formatação dinâmica ***
                                             $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $controle['crbm'] ?? 'N/A');
                                             echo htmlspecialchars($crbm_formatado . ' / ' . ($controle['obm'] ?? 'N/A'));
                                         ?>
@@ -181,7 +181,7 @@ if (isset($result_controles) && $result_controles->num_rows > 0) {
         <?php endif; ?>
 
     <?php elseif ($isAdmin): 
-        // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos para Admin ***
+        // *** Busca rótulos dinâmicos para Admin ***
         $config_atual = $forcas_config[$user_forca_seguranca] ?? null;
         $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
         $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
@@ -210,7 +210,7 @@ if (isset($result_controles) && $result_controles->num_rows > 0) {
                                     <td><?php echo htmlspecialchars($controle['prefixo_aeronave'] ?? 'Nenhum (Reserva)'); ?></td>
                                     <td>
                                         <?php 
-                                            // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                            // *** Formatação dinâmica ***
                                             $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $controle['crbm'] ?? 'N/A');
                                             echo htmlspecialchars($crbm_formatado . ' / ' . ($controle['obm'] ?? 'N/A'));
                                         ?>
@@ -242,7 +242,7 @@ if (isset($result_controles) && $result_controles->num_rows > 0) {
         <?php endif; ?>
 
     <?php elseif ($isPiloto): 
-        // *** ALTERAÇÃO APLICADA AQUI: Busca rótulos dinâmicos para Piloto ***
+        // *** Busca rótulos dinâmicos para Piloto ***
         $config_atual = $forcas_config[$user_forca_seguranca] ?? null;
         $crbm_label = $config_atual['crbm_label'] ?? 'Unid. Superior';
         $obm_label = $config_atual['obm_label'] ?? 'Subunidade';
@@ -268,7 +268,7 @@ if (isset($result_controles) && $result_controles->num_rows > 0) {
                                 <td><?php echo htmlspecialchars($controle['prefixo_aeronave'] ?? 'Nenhum (Reserva)'); ?></td>
                                 <td>
                                     <?php 
-                                        // *** ALTERAÇÃO APLICADA AQUI: Formatação dinâmica ***
+                                        // *** Formatação dinâmica ***
                                         $crbm_formatado = preg_replace('/(\d)(CRBM|CRPM)/i', '$1º $2', $controle['crbm'] ?? 'N/A');
                                         echo htmlspecialchars($crbm_formatado . ' / ' . ($controle['obm'] ?? 'N/A'));
                                     ?>

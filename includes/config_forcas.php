@@ -13,7 +13,7 @@ $json_data = file_get_contents($json_path);
 // mantendo a compatibilidade com o resto do seu código que espera por um array.
 $config_forcas = json_decode($json_data, true);
 
-// Opcional, mas recomendado: Verificação de erros.
+// Verificação de erros.
 if ($config_forcas === null && json_last_error() !== JSON_ERROR_NONE) {
     // Se houve um erro na decodificação do JSON (ex: sintaxe errada no arquivo),
     // o sistema para com uma mensagem clara.

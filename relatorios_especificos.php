@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['report_type'])) {
 
     switch ($report_type) {
         case 'missoes':
-            // Lógica para relatório de missões (mantida)
+            // Lógica para relatório de missões
             $report_title = "Relatório de Missões";
             $sql = "SELECT m.data, m.descricao_operacao, a.prefixo as aeronave, GROUP_CONCAT(p.posto_graduacao, ' ', p.nome_completo SEPARATOR '; ') as pilotos
                     FROM missoes m
@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['report_type'])) {
             break;
 
         case 'pilotos':
-            // Lógica para relatório de pilotos (mantida)
+            // Lógica para relatório de pilotos
             $report_title = "Relatório de Pilotos";
             $sql = "SELECT posto_graduacao, nome_completo, cpf, crbm_piloto, obm_piloto, status_piloto FROM pilotos";
             if (!empty($_GET['graduacao'])) { $where_clauses[] = "posto_graduacao = ?"; $params[] = $_GET['graduacao']; $types .= 's'; }
@@ -81,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['report_type'])) {
             break;
 
         case 'aeronaves':
-             // Lógica para relatório de aeronaves (mantida com as últimas alterações)
+             // Lógica para relatório de aeronaves
             $report_title = "Relatório de Aeronaves";
             $sql = "SELECT prefixo, modelo, crbm, obm, status FROM aeronaves";
              if (!empty($_GET['crbm_aeronave'])) { $where_clauses[] = "crbm = ?"; $params[] = $_GET['crbm_aeronave']; $types .= 's'; }
@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['report_type'])) {
             break;
             
         case 'manutencao':
-            // Lógica para relatório de manutenção (mantida)
+            // Lógica para relatório de manutenção
             $report_title = "Relatório de Manutenções";
             $sql = "SELECT m.data_manutencao, m.tipo_manutencao, m.responsavel, m.valor, m.garantia_ate,
                         CASE WHEN m.equipamento_tipo = 'Aeronave' THEN CONCAT('Aeronave: ', a.prefixo, ' (', a.modelo, ')')
@@ -150,7 +150,7 @@ function get_sort_report_link($column, $current_column, $current_order) {
 ?>
 
 <style>
-/* Estilos mantidos */
+/* Estilos */
 .filters-container { background-color: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,.05); margin-bottom: 30px; }
 .filter-section { display: none; border-top: 1px solid #eee; margin-top: 20px; padding-top: 20px; }
 .filter-section.active { display: block; }

@@ -30,7 +30,7 @@ require_once 'includes/header.php';
     flex-shrink: 0; /* Impede que o título encolha */
 }
 
-/* NOVO contentor para o canvas */
+/* Contentor para o canvas */
 .chart-wrapper {
     position: relative; /* Essencial para o Chart.js responsivo */
     flex-grow: 1; /* Faz este elemento ocupar todo o espaço vertical disponível */

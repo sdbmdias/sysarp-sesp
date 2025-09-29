@@ -2,7 +2,7 @@
 // 1. INCLUI O CABEÇALHO PADRÃO
 require_once 'includes/header.php';
 
-// 2. VERIFICAÇÃO DE PERMISSÃO (CORRIGIDO)
+// 2. VERIFICAÇÃO DE PERMISSÃO
 if (!$isSuperAdmin) {
     header("Location: dashboard.php");
     exit();

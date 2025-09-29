@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Iniciais Dinâmicos ***
+// *** INÍCIO DA SEÇÃO: Definição de Rótulos Iniciais Dinâmicos ***
 // ====================================================================================================
 $initial_posto_label = 'Posto/Graduação';
 $initial_crbm_label = 'Unidade Superior';
@@ -73,7 +73,7 @@ if ($isAdmin && !$isSuperAdmin && isset($config_forcas[$user_forca_seguranca])) 
     $initial_cparp_label = $config_admin['cparp_label'];
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ALTERADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 ?>
 

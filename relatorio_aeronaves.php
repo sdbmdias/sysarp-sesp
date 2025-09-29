@@ -8,7 +8,7 @@ $where_clauses = [];
 $params = [];
 $types = '';
 
-// Lógica para buscar o CRBM do piloto logado, se for um piloto (Adicionado)
+// Lógica para buscar o CRBM do piloto logado, se for um piloto
 $logged_in_pilot_crbm = '';
 if ($isPiloto && isset($_SESSION['user_id'])) {
     $stmt_crbm = $conn->prepare("SELECT crbm_piloto FROM pilotos WHERE id = ?");
@@ -42,7 +42,7 @@ $sql_aeronaves = "SELECT
     a.id, a.prefixo, a.fabricante, a.modelo, a.numero_serie, a.cadastro_sisant, a.validade_sisant, 
     a.crbm, a.obm, a.tipo_drone, a.pmd_kg, a.status, a.homologacao_anatel,
     COALESCE(al.distancia_total_acumulada, 0) AS distancia_total_acumulada,
-    COALESCE(al.tempo_voo_total_acumulado, 0) AS tempo_voo_total_acumulado -- CORRIGIDO: Removido 'A' final do apelido
+    COALESCE(al.tempo_voo_total_acumulado, 0) AS tempo_voo_total_acumulado
     FROM aeronaves a
     LEFT JOIN aeronaves_logbook al ON a.id = al.aeronave_id"; // LEFT JOIN para incluir dados de logbook
 

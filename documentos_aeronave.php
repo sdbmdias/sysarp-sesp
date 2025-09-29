@@ -9,7 +9,7 @@ $aeronave_details = null;
 $documentos_encontrados = [];
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ADICIONADA: Carregamento dinâmico das Forças de Segurança ***
+// *** INÍCIO DA SEÇÃO: Carregamento dinâmico das Forças de Segurança ***
 // ====================================================================================================
 $forcas_config = [];
 $config_file_path = __DIR__ . '/includes/config_forcas.json'; 
@@ -18,7 +18,7 @@ if (file_exists($config_file_path)) {
     $forcas_config = json_decode($json_content, true);
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ADICIONADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 
 
@@ -199,7 +199,7 @@ $stmt_documentos->close();
                 <div class="form-group">
                     <?php if ($isSuperAdmin): ?>
                         <label for="forca_seguranca">Associar a uma Força Específica:</label>
-                        <?php // *** INÍCIO DA SEÇÃO ALTERADA: Select dinâmico *** ?>
+                        <?php // *** INÍCIO DA SEÇÃO: Select dinâmico *** ?>
                         <select id="forca_seguranca" name="forca_seguranca">
                             <option value="">Geral (Todas as Forças)</option>
                             <?php if (!empty($forcas_config)): ?>
@@ -211,7 +211,7 @@ $stmt_documentos->close();
                             <?php endif; ?>
                         </select>
                         <small>Super Admins podem associar a qualquer força ou deixar como geral.</small>
-                        <?php // *** FIM DA SEÇÃO ALTERADA *** ?>
+                        <?php // *** FIM DA SEÇÃO *** ?>
                     <?php else: ?>
                         <label for="forca_seguranca">Força de Segurança Associada:</label>
                         <input type="text" id="forca_seguranca" name="forca_seguranca" value="<?php echo htmlspecialchars($user_forca_seguranca); ?>" readonly>

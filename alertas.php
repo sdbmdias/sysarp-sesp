@@ -2,7 +2,7 @@
 // 1. INCLUI O CABEÇALHO E AS VERIFICAÇÕES PADRÃO
 require_once 'includes/header.php';
 
-// Apenas administradores podem ver esta página, então adicionamos uma verificação extra.
+// Apenas administradores podem ver esta página, por isso verificação extra.
 if (!$isSuperAdmin && !$isAdmin) {
     // Redireciona para o dashboard se não for admin
     header("Location: dashboard.php");

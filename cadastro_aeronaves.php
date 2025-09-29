@@ -151,7 +151,7 @@ if ($isAdmin && !$isSuperAdmin && isset($unidades_config[$user_forca_seguranca])
                 </div>
 
                 <?php // ======================================================================================= ?>
-                <?php // *** INÍCIO DA SEÇÃO ADICIONADA: Campos SISANT e Data de Aquisição *** ?>
+                <?php // *** INÍCIO DA SEÇÃO: Campos SISANT e Data de Aquisição *** ?>
                 <?php // ======================================================================================= ?>
                 <div class="form-group">
                     <label for="cadastro_sisant">Cadastro SISANT:</label>
@@ -166,7 +166,7 @@ if ($isAdmin && !$isSuperAdmin && isset($unidades_config[$user_forca_seguranca])
                     <input type="date" id="data_aquisicao" name="data_aquisicao" required>
                 </div>
                 <?php // ======================================================================================= ?>
-                <?php // *** FIM DA SEÇÃO ADICIONADA *** ?>
+                <?php // *** FIM DA SEÇÃO *** ?>
                 <?php // ======================================================================================= ?>
                 
                 <div class="form-group">

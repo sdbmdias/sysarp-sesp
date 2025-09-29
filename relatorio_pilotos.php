@@ -36,7 +36,7 @@ if (isset($_GET['crbm']) && !empty($_GET['crbm'])) {
     $types .= 's';
 }
 
-// SQL para buscar pilotos e seus dados de logbook (Atualizado)
+// SQL para buscar pilotos e seus dados de logbook
 $sql_pilotos = "SELECT 
     p.id, p.posto_graduacao, p.nome_completo, p.crbm_piloto, p.obm_piloto, p.status_piloto, p.codigo_cadastro, p.forca_seguranca,
     COALESCE(SUM(m.total_distancia_percorrida), 0) AS distancia_total_acumulada_piloto,
@@ -73,7 +73,7 @@ if ($stmt_pilotos) {
 }
 $conn->close(); // Fechar conexão após todas as consultas necessárias
 
-// Funções de formatação de tempo e distância (Copiadas e ajustadas)
+// Funções de formatação de tempo e distância
 function formatarTempoVooCompleto($segundos) {
     if ($segundos <= 0) return '0min';
     $horas = floor($segundos / 3600);
@@ -124,7 +124,7 @@ function formatarDistancia($metros) {
             $title_crbm_suffix = ' - ' . htmlspecialchars($formatted_crbm_title);
         }
     } else if ($isAdmin) { // Se não houver filtro específico e o usuário for administrador
-        $title_crbm_suffix = ' - De Todos os Pilotos'; // Ajustado para "Pilotos"
+        $title_crbm_suffix = ' - De Todos os Pilotos'; 
     }
     ?>
     <h1>Logbook por Piloto<?php echo $title_crbm_suffix; ?></h1>

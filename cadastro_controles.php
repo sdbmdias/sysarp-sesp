@@ -89,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Iniciais Dinâmicos ***
+// *** INÍCIO DA SEÇÃO: Definição de Rótulos Iniciais Dinâmicos ***
 // ====================================================================================================
 $initial_crbm_label = 'Unidade de Lotação';
 $initial_obm_label = 'Subunidade';
@@ -99,7 +99,7 @@ if ($isAdmin && !$isSuperAdmin && isset($unidades_config[$user_forca_seguranca])
     $initial_obm_label = $unidades_config[$user_forca_seguranca]['obm_label'];
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ALTERADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 ?>
 
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const obmSelect = document.getElementById('obm');
     const aeronaveSelect = document.getElementById('aeronave_id');
 
-    // --- FUNÇÕES (permanecem inalteradas) ---
+    // --- FUNÇÕES ---
     
     function formatCrbm(crbm) {
         if (crbm && (crbm.match(/^\d+CRBM$/i) || crbm.match(/^\d+CRPM$/i))) {

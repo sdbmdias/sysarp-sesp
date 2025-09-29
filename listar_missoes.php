@@ -195,8 +195,7 @@ function formatarTempoVoo($segundos) {
         if (!empty($current_crbm_filter)) {
             if ($current_crbm_filter === 'GOST') {
                 $title_crbm_suffix = ' - GOST';
-            } else {
-                // *** ALTERAÇÃO APLICADA AQUI ***
+            } else {                
                 // A expressão agora reconhece CRBM e CRPM para formatação.
                 $crbm_formatado_titulo = preg_replace('/(\d)(CRBM|CRPM)/', '$1º $2', $current_crbm_filter);
                 $title_crbm_suffix = ' - ' . htmlspecialchars($crbm_formatado_titulo);

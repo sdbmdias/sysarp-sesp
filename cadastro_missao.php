@@ -15,7 +15,7 @@ if (($isAdmin || $isPiloto) && !$isSuperAdmin && isset($config_forcas[$user_forc
 
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ALTERADA: Lógica de filtragem de aeronaves aprimorada ***
+// *** INÍCIO DA SEÇÃO: Lógica de filtragem de aeronaves ***
 // ====================================================================================================
 if ($isPiloto) {
     // Para pilotos, busca a OBM específica para filtrar as aeronaves
@@ -55,11 +55,11 @@ if ($result_aeronaves) {
     if (isset($stmt_aeronaves)) { $stmt_aeronaves->close(); }
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ALTERADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 
 
-// Lógica de busca dos Tipos de Operação (sem alterações)
+// Lógica de busca dos Tipos de Operação
 if ($isSuperAdmin) {
     $sql_operacoes = "
         SELECT t.id, t.nome, o.forca_seguranca 
@@ -98,7 +98,7 @@ if (isset($stmt_operacoes)) {
 }
 
 
-// Lógica de submissão do formulário (sem alterações)
+// Lógica de submissão do formulário
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     if (isset($_FILES['gpx_files']) && count(array_filter($_FILES['gpx_files']['name'])) > 0 && isset($_POST['pilotos']) && !empty(array_filter($_POST['pilotos']))) {

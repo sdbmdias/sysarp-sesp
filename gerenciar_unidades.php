@@ -55,8 +55,7 @@ if (isset($_GET['delete_id'])) {
     if ($filhos_count > 0) {
         $mensagem_status = "<div class='error-message-box'>Não é possível excluir esta unidade, pois ela possui subunidades vinculadas.</div>";
     } else {
-        // 2. (Opcional, mas recomendado) Verifica se a unidade está em uso em aeronaves, pilotos, etc.
-        // Esta verificação pode ser expandida conforme a necessidade.
+        // 2. Verifica se a unidade está em uso em aeronaves, pilotos, etc.
         
         $stmt_delete = $conn->prepare("DELETE FROM unidades WHERE id = ?");
         $stmt_delete->bind_param("i", $delete_id);
@@ -121,7 +120,7 @@ $unidades_pai_list = $conn->query("SELECT id, nome_unidade, forca_sigla FROM uni
                     <label for="unidade_pai_id">Unidade Superior (Pai):</label>
                     <select id="unidade_pai_id" name="unidade_pai_id">
                         <option value="">Nenhuma (Unidade de Nível Superior)</option>
-                        <?php // Este campo será populado dinamicamente via JavaScript ?>
+                        <?php // Populado dinamicamente via JavaScript ?>
                     </select>
                     <small>Selecione uma unidade superior para criar uma subunidade (ex: OBM dentro de um CRBM).</small>
                 </div>

@@ -138,7 +138,7 @@ if (!empty($historico_manutencoes)) {
         }
         
         // =================================================================
-        // LÓGICA DE DESENHO SIMPLIFICADA E CORRIGIDA
+        // LÓGICA DE DESENHO SIMPLIFICADA
         // =================================================================
         $startX = $pdf->GetX();
         $startY = $pdf->GetY();

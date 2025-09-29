@@ -94,7 +94,7 @@ if ($controle_id) {
 }
 
 // ====================================================================================================
-// *** INÍCIO DA SEÇÃO ALTERADA: Definição de Rótulos Iniciais Dinâmicos ***
+// *** INÍCIO DA SEÇÃO: Definição de Rótulos Iniciais Dinâmicos ***
 // ====================================================================================================
 $initial_crbm_label = 'Unidade de Lotação';
 $initial_obm_label = 'Subunidade';
@@ -104,7 +104,7 @@ if (isset($controle_data['forca_seguranca']) && isset($unidades[$controle_data['
     $initial_obm_label = $unidades[$controle_data['forca_seguranca']]['obm_label'];
 }
 // ====================================================================================================
-// *** FIM DA SEÇÃO ALTERADA ***
+// *** FIM DA SEÇÃO ***
 // ====================================================================================================
 ?>
 

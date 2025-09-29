@@ -200,7 +200,7 @@ if ($aeronave_id) {
 </div>
 
 <?php // ==================================================================================================== ?>
-<?php // *** INÍCIO DA SEÇÃO ALTERADA: Bloco de JavaScript substituído por versão completa e correta *** ?>
+<?php // *** INÍCIO DA SEÇÃ: Bloco de JavaScript Completo *** ?>
 <?php // ==================================================================================================== ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php // ==================================================================================================== ?>
-<?php // *** FIM DA SEÇÃO ALTERADA *** ?>
+<?php // *** FIM DA SEÇÃO *** ?>
 <?php // ==================================================================================================== ?>
 
 <?php

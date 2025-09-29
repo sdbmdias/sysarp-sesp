@@ -233,7 +233,7 @@ function formatarTempoVoo($segundos) {
                 </div>
             </div>
         <?php elseif ($isPiloto): 
-                // *** INÍCIO DA SEÇÃO ALTERADA ***
+                // *** INÍCIO DA SEÇÃO ***
                 // Busca os rótulos corretos do array de configuração
                 $crbm_label = $forcas_config[$fs_do_usuario]['crbm_label'] ?? 'CRBM';
                 $obm_label = $forcas_config[$fs_do_usuario]['obm_label'] ?? 'OBM';
@@ -259,7 +259,7 @@ function formatarTempoVoo($segundos) {
                     <p><?php echo htmlspecialchars($total_manutencoes); ?></p>
                 </div>
             </div>
-        <?php endif; // *** FIM DA SEÇÃO ALTERADA *** ?>
+        <?php endif; // *** FIM DA SEÇÃO *** ?>
     </div>
 
     <div class="recent-missions">
